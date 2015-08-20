@@ -213,20 +213,20 @@ function axis.intersect(xyz)
     local s = {}
     if xyz.x ~= nil and xyz.y ~= nil then
         local sx = {}
-        for _, v in xyz.x do sx[v] = true end
-        for _, v in xyz.y do
+        for _, v in pairs(axis.x[xyz.x]) do sx[v] = true end
+        for _, v in pairs(axis.y[xyz.y]) do
             if sx[v] then s[#s+1] = v end
         end
     elseif xyz.y ~= nil and xyz.z ~= nil then
         local sy = {}
-        for _, v in xyz.y do sy[v] = true end
-        for _, v in xyz.z do
+        for _, v in pairs(axis.y[xyz.y]) do sy[v] = true end
+        for _, v in pairs(axis.z[xyz.z]) do
             if sy[v] then s[#s+1] = v end
         end
     elseif xyz.z ~= nil and xyz.x ~= nil then
         local sz = {}
-        for _, v in xyz.z do sz[v] = true end
-        for _, v in xyz.x do
+        for _, v in pairs(axis.z[xyz.z]) do sz[v] = true end
+        for _, v in pairs(axis.x[xyz.x]) do
             if sz[v] then s[#s+1] = v end
         end
     end

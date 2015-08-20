@@ -13,7 +13,7 @@ function Chick.new(p)
     return setmetatable({
         players = p,
         current = 1,
-        board = Chick._generate_board()
+        board = Chick._generate_board(p)
     }, {__index = Chick})
 end
 
@@ -25,7 +25,7 @@ function Chick:move(chain)
     if player ~= self.current then return 0 end
 
     -- make sure the chain is valid
-    for _, v in chain do
+    for _, v in pairs(chain) do
         if v < 1 or v > 121 then return 0 end
     end
 
@@ -47,9 +47,9 @@ function Chick:move(chain)
             local yc = (from.y + to.y) / 2
             local center = axis.intersect({x = from.x, y = yc})[1]
             -- center node must not be void
-            if self.board[axis.intersect(center)[1]] == 0 then return 0 end
+            if self.board[axis.intersect(axis.map[center])[1]] == 0 then return 0 end
             -- make sure the rest of the path is clear
-            local upordown = if from.y < to.y then 1 else -1 end
+            local upordown = from.y < to.y and 1 or -1
             for j = from.y, yc - upordown, upordown do
                 if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then return 0 end
             end
@@ -64,9 +64,9 @@ function Chick:move(chain)
             local xc = (from.x + to.x) / 2
             local center = axis.intersect({x = xc, y = from.y})[1]
             -- center node must not be void
-            if self.board[axis.intersect(center)[1]] == 0 then return 0 end
+            if self.board[axis.intersect(axis.map[center])[1]] == 0 then return 0 end
             -- make sure the rest of the path is clear
-            local upordown = if from.x < to.x then 1 else -1 end
+            local upordown = from.x < to.x and 1 or -1
             for j = from.x, xc - upordown, upordown do
                 if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then return 0 end
             end
@@ -81,9 +81,9 @@ function Chick:move(chain)
             local yc = (from.y + to.y) / 2
             local center = axis.intersect({y = yc, z = from.z})[1]
             -- center node must not be void
-            if self.board[axis.intersect(center)[1]] == 0 then return 0 end
+            if self.board[axis.intersect(axis.map[center])[1]] == 0 then return 0 end
             -- make sure the rest of the path is clear
-            local upordown = if from.y < to.y then 1 else -1 end
+            local upordown = from.y < to.y and 1 or -1
             for j = from.y, yc - upordown, upordown do
                 if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then return 0 end
             end
@@ -105,10 +105,10 @@ function Chick:move(chain)
     return self._next()
 end
 
-function Chick._generate_board()
-    assert(self.players == 2 or self.players == 3 or self.players == 4 or self.players == 6, "illegal number of players")
+function Chick._generate_board(players)
+    assert(players == 2 or players == 3 or players == 4 or players == 6, "illegal number of players")
     local board = require 'board'
-    return board[p]
+    return board[players]
 end
 
 function Chick:_win()
@@ -165,5 +165,6 @@ function Chick:_win()
 end
 
 function Chick:_next()
-    return self.current = self.current % self.players + 1
+    self.current = self.current % self.players + 1
+    return self.current
 end
