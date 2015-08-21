@@ -53,6 +53,7 @@ function Chick:move(chain)
 
         if math.abs(delta.x) + math.abs(delta.y) + math.abs(delta.z) == 2 then
             -- simple move detected
+            print("(debug) simple move.")
             -- make sure target is clear
             if self.board[chain[2]] ~= 0 then
                 print("(debug) adjacent target node is not clear.")
@@ -61,7 +62,7 @@ function Chick:move(chain)
 
             -- save move to board
             self.board[chain[1]] = 0
-            self.board[chain[1]] = self.current
+            self.board[chain[2]] = self.current
 
             -- look for win
             if self:_win() then
@@ -259,6 +260,7 @@ function Chick:_win()
             return false
         end
     end
+    print("(debug) we have a winner.")
     return true
 end
 
