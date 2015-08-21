@@ -19,6 +19,10 @@ end
 
 function Chick:move(chain)
     -- make sure the chain is valid
+    if chain[1] == chain[#chain] then
+        print("(debug) move chain is a cycle.")
+        return 0
+    end
     for _, v in pairs(chain) do
         if v < 1 or v > 121 then
             print("(debug) invalid move chain.")
@@ -40,7 +44,34 @@ function Chick:move(chain)
     local axis = require 'axis'
 
     -- special case simple move
+    if #chain == 2 then
+        local delta = {
+            x = axis.map[chain[2]].x - axis.map[chain[1]].x,
+            y = axis.map[chain[2]].y - axis.map[chain[1]].y,
+            z = axis.map[chain[2]].z - axis.map[chain[1]].z
+        }
 
+        if math.abs(delta.x) + math.abs(delta.y) + math.abs(delta.z) == 2 then
+            -- simple move detected
+            -- make sure target is clear
+            if self.board[chain[2]] ~= 0 then
+                print("(debug) adjacent target node is not clear.")
+                return 0
+            end
+
+            -- save move to board
+            self.board[chain[1]] = 0
+            self.board[chain[1]] = self.current
+
+            -- look for win
+            if self:_win() then
+                return -1 * self.current
+            end
+
+            -- next turn
+            return self:_next()
+        end
+    end
 
     -- execute each step of the turn
     for i = 2, #chain do
@@ -50,6 +81,7 @@ function Chick:move(chain)
 
         -- make sure the jump is symmetric
         if from.x == to.x then
+
             local ydelta = math.abs(from.y - to.y)
             -- even number of nodes between source and target
             if ydelta % 2 == 1 then
@@ -57,6 +89,7 @@ function Chick:move(chain)
                 print("(debug) ydelta = " .. ydelta)
                 return 0
             end
+
             -- calc center
             local yc = (from.y + to.y) / 2
             local center = axis.intersect({x = from.x, y = yc})[1]
@@ -66,6 +99,7 @@ function Chick:move(chain)
                 print("(debug) center node is void.")
                 return 0
             end
+
             -- make sure the rest of the path is clear
             local upordown = from.y < to.y and -1 or 1
             print("(debug) upordown = " .. upordown)
@@ -82,6 +116,7 @@ function Chick:move(chain)
                 end
             end
         elseif from.y == to.y then
+
             local xdelta = math.abs(from.x - to.x)
             -- even number of nodes between source and target
             if xdelta % 2 == 1 then
@@ -89,6 +124,7 @@ function Chick:move(chain)
                 print("(debug) xdelta = " .. xdelta)
                 return 0
             end
+
             -- calc center
             local xc = (from.x + to.x) / 2
             local center = axis.intersect({x = xc, y = from.y})[1]
@@ -98,6 +134,7 @@ function Chick:move(chain)
                 print("(debug) center node is void.")
                 return 0
             end
+
             -- make sure the rest of the path is clear
             local upordown = from.x < to.x and -1 or 1
             for j = from.x, xc - upordown, upordown do
@@ -113,6 +150,7 @@ function Chick:move(chain)
                 end
             end
         elseif from.z == to.z then
+
             local ydelta = math.abs(from.y - to.y)
             -- even number of nodes between source and target
             if ydelta % 2 == 1 then
@@ -120,6 +158,7 @@ function Chick:move(chain)
                 print("(debug) ydelta = " .. ydelta)
                 return 0
             end
+
             -- calc center
             local yc = (from.y + to.y) / 2
             local center = axis.intersect({y = yc, z = from.z})[1]
@@ -129,6 +168,7 @@ function Chick:move(chain)
                 print("(debug) center node is void.")
                 return 0
             end
+
             -- make sure the rest of the path is clear
             local upordown = from.y < to.y and -1 or 1
             for j = from.y, yc - upordown, upordown do
@@ -151,7 +191,7 @@ function Chick:move(chain)
 
         -- save move to board
         self.board[chain[i-1]] = 0
-        self.board[chain[i]] = player
+        self.board[chain[i]] = self.current
     end
 
     -- look for win
