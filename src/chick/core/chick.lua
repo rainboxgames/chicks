@@ -18,16 +18,26 @@ function Chick.new(p)
 end
 
 function Chick:move(chain)
-    local axis = require 'axis'
+    -- make sure the chain is valid
+    for _, v in pairs(chain) do
+        if v < 1 or v > 121 then
+            print("(debug) invalid move chain.")
+            return 0
+        end
+    end
 
     -- check current turn
     local player = self.board[chain[1]]
-    if player ~= self.current then return 0 end
-
-    -- make sure the chain is valid
-    for _, v in pairs(chain) do
-        if v < 1 or v > 121 then return 0 end
+    if player == 0 then
+        print("(debug) there is no marble.")
+        return 0
     end
+    if player ~= self.current then
+        print("(debug) you can't touch that marble.")
+        return 0
+    end
+
+    local axis = require 'axis'
 
     -- special case simple move
 
@@ -42,121 +52,169 @@ function Chick:move(chain)
         if from.x == to.x then
             local ydelta = math.abs(from.y - to.y)
             -- even number of nodes between source and target
-            if ydelta % 2 == 1 then return 0 end
+            if ydelta % 2 == 1 then
+                print("(debug) even number of nodes between source and target.")
+                print("(debug) ydelta = " .. ydelta)
+                return 0
+            end
             -- calc center
             local yc = (from.y + to.y) / 2
             local center = axis.intersect({x = from.x, y = yc})[1]
+            print("(debug) center : x = " .. from.x .. ", y = " .. yc .. ", node = " .. center)
             -- center node must not be void
-            if self.board[axis.intersect(axis.map[center])[1]] == 0 then return 0 end
+            if self.board[axis.intersect(axis.map[center])[1]] == 0 then
+                print("(debug) center node is void.")
+                return 0
+            end
             -- make sure the rest of the path is clear
-            local upordown = from.y < to.y and 1 or -1
+            local upordown = from.y < to.y and -1 or 1
+            print("(debug) upordown = " .. upordown)
             for j = from.y, yc - upordown, upordown do
-                if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then return 0 end
+                if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then
+                    print("(debug) y-direction jump segment is not clear. [1]")
+                    return 0
+                end
             end
             for j = yc + upordown, to.y, upordown do
-                if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then return 0 end
+                if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then
+                    print("(debug) y-direction jump segment is not clear. [2]")
+                    return 0
+                end
             end
         elseif from.y == to.y then
             local xdelta = math.abs(from.x - to.x)
             -- even number of nodes between source and target
-            if xdelta % 2 == 1 then return 0 end
+            if xdelta % 2 == 1 then
+                print("(debug) even number of nodes between source and target.")
+                print("(debug) xdelta = " .. xdelta)
+                return 0
+            end
             -- calc center
             local xc = (from.x + to.x) / 2
             local center = axis.intersect({x = xc, y = from.y})[1]
+            print("(debug) center : x = " .. xc .. ", y = " .. from.y .. ", node = " .. center)
             -- center node must not be void
-            if self.board[axis.intersect(axis.map[center])[1]] == 0 then return 0 end
+            if self.board[axis.intersect(axis.map[center])[1]] == 0 then
+                print("(debug) center node is void.")
+                return 0
+            end
             -- make sure the rest of the path is clear
-            local upordown = from.x < to.x and 1 or -1
+            local upordown = from.x < to.x and -1 or 1
             for j = from.x, xc - upordown, upordown do
-                if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then return 0 end
+                if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then
+                    print("(debug) x-direction jump segment is not clear. [3]")
+                    return 0
+                end
             end
             for j = xc + upordown, to.x, upordown do
-                if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then return 0 end
+                if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then
+                    print("(debug) x-direction jump segment is not clear. [4]")
+                    return 0
+                end
             end
         elseif from.z == to.z then
             local ydelta = math.abs(from.y - to.y)
             -- even number of nodes between source and target
-            if ydelta % 2 == 1 then return 0 end
+            if ydelta % 2 == 1 then
+                print("(debug) even number of nodes between source and target.")
+                print("(debug) ydelta = " .. ydelta)
+                return 0
+            end
             -- calc center
             local yc = (from.y + to.y) / 2
             local center = axis.intersect({y = yc, z = from.z})[1]
+            print("(debug) center : x = " .. from.x .. ", y = " .. yc .. ", node = " .. center)
             -- center node must not be void
-            if self.board[axis.intersect(axis.map[center])[1]] == 0 then return 0 end
+            if self.board[axis.intersect(axis.map[center])[1]] == 0 then
+                print("(debug) center node is void.")
+                return 0
+            end
             -- make sure the rest of the path is clear
-            local upordown = from.y < to.y and 1 or -1
+            local upordown = from.y < to.y and -1 or 1
             for j = from.y, yc - upordown, upordown do
-                if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then return 0 end
+                if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then
+                    print("(debug) y-direction jump segment is not clear. [5]")
+                    return 0
+                end
             end
             for j = yc + upordown, to.y, upordown do
-                if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then return 0 end
+                if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then
+                    print("(debug) y-direction jump segment is not clear. [6]")
+                    return 0
+                end
             end
         else
-            -- source and target not even aligned
+            -- source and target are not aligned
+            print("(debug) source and target are not aligned.")
             return 0
         end
+
+        -- save move to board
+        self.board[chain[i-1]] = 0
+        self.board[chain[i]] = player
     end
 
     -- look for win
-    if self._win() then
+    if self:_win() then
         return -1 * self.current
     end
 
     -- next turn
-    return self._next()
+    return self:_next()
 end
 
 function Chick._generate_board(players)
-    assert(players == 2 or players == 3 or players == 4 or players == 6, "illegal number of players")
+    assert(players == 2 or players == 3 or players == 4 or players == 6, "illegal number of players.")
     local board = require 'board'
     return board[players]
 end
 
 function Chick:_win()
     local triangles = require 'triangles'
-    local t
+    local goal = {}
 
     -- determine goal triangle
     if self.players == 2 then
         if self.current == 1 then
-            t = triangles[d]
+            goal = triangles.d
         else
-            t = triangles[a]
+            goal = triangles.a
         end
     elseif self.players == 3 then
         if self.current == 1 then
-            t = triangles[d]
+            goal = triangles.d
         elseif self.current == 2 then
-            t = triangles[f]
+            goal = triangles.d
         else
-            t = triangles[b]
+            goal = triangles.b
         end
     elseif self.players == 4 then
         if self.current == 1 then
-            t = triangles[d]
+            goal = triangles.d
         elseif self.current == 2 then
-            t = triangles[e]
+            goal = triangles.e
         elseif self.current == 3 then
-            t = triangles[a]
+            goal = triangles.a
         else
-            t = triangles[b]
+            goal = triangles.b
         end
     elseif self.players == 6 then
         if self.current == 1 then
-            t = triangles[d]
+            goal = triangles.d
         elseif self.current == 2 then
-            t = triangles[e]
+            goal = triangles.e
         elseif self.current == 3 then
-            t = triangles[f]
+            goal = triangles.f
         elseif self.current == 4 then
-            t = triangles[a]
+            goal = triangles.a
         elseif self.current == 5 then
-            t = triangles[b]
+            goal = triangles.b
         else
-            t = triangles[c]
+            goal = triangles.c
         end
     end
 
-    for _, v in t do
+    for _, v in pairs(goal) do
         if self.board[v] ~= self.current then
             return false
         end
