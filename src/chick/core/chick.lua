@@ -63,7 +63,7 @@ function Chick:move(chain)
             -- save move to board
             self.board[chain[1]] = 0
             self.board[chain[2]] = self.current
-            print("(debug) move " .. chain[1] .. " -> " .. chain[2] .. " [1]")
+            print("(debug) move " .. chain[1] .. " -> " .. chain[2] .. " simple")
 
             -- look for win
             if self:_win() then
@@ -211,7 +211,7 @@ function Chick:move(chain)
         -- save move to board
         self.board[chain[i-1]] = 0
         self.board[chain[i]] = self.current
-        print("(debug) move " .. chain[i-1] .. " -> " .. chain[i] .. " [2]")
+        print("(debug) move " .. chain[i-1] .. " -> " .. chain[i] .. " jump")
     end
 
     -- look for win
