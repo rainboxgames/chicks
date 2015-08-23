@@ -63,6 +63,7 @@ function Chick:move(chain)
             -- save move to board
             self.board[chain[1]] = 0
             self.board[chain[2]] = self.current
+            print("(debug) move " .. chain[1] .. " -> " .. chain[2] .. " [1]")
 
             -- look for win
             if self:_win() then
@@ -83,6 +84,7 @@ function Chick:move(chain)
         -- make sure the jump is symmetric
         if from.x == to.x then
 
+            print("(debug) x direction")
             local ydelta = math.abs(from.y - to.y)
             -- even number of nodes between source and target
             if ydelta % 2 == 1 then
@@ -102,22 +104,27 @@ function Chick:move(chain)
             end
 
             -- make sure the rest of the path is clear
-            local upordown = from.y < to.y and -1 or 1
+            local upordown = from.y > to.y and -1 or 1
             print("(debug) upordown = " .. upordown)
-            for j = from.y, yc - upordown, upordown do
-                if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then
+            for j = from.y + upordown, yc - upordown, upordown do
+                local intersection = axis.intersect({x = from.x, y = j})[1]
+                print("(debug) checking node " .. intersection)
+                if self.board[intersection] ~= 0 then
                     print("(debug) y-direction jump segment is not clear. [1]")
                     return 0
                 end
             end
             for j = yc + upordown, to.y, upordown do
-                if self.board[axis.intersect({x = from.x, y = j})[1]] ~= 0 then
+                local intersection = axis.intersect({x = from.x, y = j})[1]
+                print("(debug) checking node " .. intersection)
+                if self.board[intersection] ~= 0 then
                     print("(debug) y-direction jump segment is not clear. [2]")
                     return 0
                 end
             end
         elseif from.y == to.y then
 
+            print("(debug) y direction")
             local xdelta = math.abs(from.x - to.x)
             -- even number of nodes between source and target
             if xdelta % 2 == 1 then
@@ -137,21 +144,27 @@ function Chick:move(chain)
             end
 
             -- make sure the rest of the path is clear
-            local upordown = from.x < to.x and -1 or 1
-            for j = from.x, xc - upordown, upordown do
-                if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then
+            local upordown = from.x > to.x and -1 or 1
+            print("(debug) upordown = " .. upordown)
+            for j = from.x + upordown, xc - upordown, upordown do
+                local intersection = axis.intersect({x = j, y = from.y})[1]
+                print("(debug) checking node " .. intersection)
+                if self.board[intersection] ~= 0 then
                     print("(debug) x-direction jump segment is not clear. [3]")
                     return 0
                 end
             end
             for j = xc + upordown, to.x, upordown do
-                if self.board[axis.intersect({x = j, y = from.y})[1]] ~= 0 then
+                local intersection = axis.intersect({x = j, y = from.y})[1]
+                print("(debug) checking node " .. intersection)
+                if self.board[intersection] ~= 0 then
                     print("(debug) x-direction jump segment is not clear. [4]")
                     return 0
                 end
             end
         elseif from.z == to.z then
 
+            print("(debug) z direction")
             local ydelta = math.abs(from.y - to.y)
             -- even number of nodes between source and target
             if ydelta % 2 == 1 then
@@ -171,15 +184,20 @@ function Chick:move(chain)
             end
 
             -- make sure the rest of the path is clear
-            local upordown = from.y < to.y and -1 or 1
-            for j = from.y, yc - upordown, upordown do
-                if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then
+            local upordown = from.y > to.y and -1 or 1
+            print("(debug) upordown = " .. upordown)
+            for j = from.y + upordown, yc - upordown, upordown do
+                local intersection = axis.intersect({y = j, z = from.z})[1]
+                print("(debug) checking node " .. intersection)
+                if self.board[intersection] ~= 0 then
                     print("(debug) y-direction jump segment is not clear. [5]")
                     return 0
                 end
             end
             for j = yc + upordown, to.y, upordown do
-                if self.board[axis.intersect({y = j, z = from.z})[1]] ~= 0 then
+                local intersection = axis.intersect({y = j, z = from.z})[1]
+                print("(debug) checking node " .. intersection)
+                if self.board[intersection] ~= 0 then
                     print("(debug) y-direction jump segment is not clear. [6]")
                     return 0
                 end
@@ -193,6 +211,7 @@ function Chick:move(chain)
         -- save move to board
         self.board[chain[i-1]] = 0
         self.board[chain[i]] = self.current
+        print("(debug) move " .. chain[i-1] .. " -> " .. chain[i] .. " [2]")
     end
 
     -- look for win
