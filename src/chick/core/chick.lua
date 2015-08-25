@@ -11,6 +11,7 @@ Chick = {}
 
 function Chick.new(p)
     return setmetatable({
+        -- attributes
         players = p,
         current = 1,
         board = Chick._generate_board(p)
@@ -225,8 +226,8 @@ end
 
 function Chick._generate_board(players)
     assert(players == 2 or players == 3 or players == 4 or players == 6, "illegal number of players.")
-    local board = require 'board'
-    return board[players]
+    local setup = require 'setup'
+    return setup[players]
 end
 
 function Chick:_win()
