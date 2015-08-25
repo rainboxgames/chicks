@@ -16,12 +16,12 @@ function Board.new()
         light = love.graphics.newImage('assets/light.png'),
         empty = love.graphics.newImage('assets/empty.png'),
         marbles = {
-            blue = love.graphics.newImage('assets/blue.png'),
-            green = love.graphics.newImage('assets/green.png'),
-            purple = love.graphics.newImage('assets/purple.png'),
-            red = love.graphics.newImage('assets/red.png'),
-            white = love.graphics.newImage('assets/white.png'),
-            yellow = love.graphics.newImage('assets/yellow.png')
+            love.graphics.newImage('assets/blue.png'),
+            love.graphics.newImage('assets/green.png'),
+            love.graphics.newImage('assets/purple.png'),
+            love.graphics.newImage('assets/red.png'),
+            love.graphics.newImage('assets/white.png'),
+            love.graphics.newImage('assets/yellow.png')
         },
 
         tiles = require 'tiles',
@@ -32,7 +32,7 @@ function Board.new()
         radius = 22,
         radius2 = 484,
         board_offset = {x = 132, y = 20},
-        tile_offset = {x = 380, y = 30}
+        tile_offset = {x = 380, y = 28}
 
     }, {__index = Board})
 end
@@ -76,7 +76,7 @@ function Board:draw()
 end
 
 function Board:place_marble(t, color)
-    assert(Board.colors[color] ~= nil, "invalid marble color.")
+    assert(Board.colors[color] == nil, "invalid marble color.")
     self.marble_map[t] = color
 end
 

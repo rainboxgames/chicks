@@ -29,6 +29,19 @@ function love.load()
     -- load ui components
     require 'board'
     ui = Board.new()
+
+    -- load core module
+    require 'chick'
+    core = Chick.new(2)
+
+    -- example copy initial board map to ui
+    for k, v in pairs(core.board) do
+        if v == 1 then
+            ui:place_marble(k, Board.colors.green)
+        elseif v == 2 then
+            ui:place_marble(k, Board.colors.blue)
+        end
+    end
 end
 
 function love.mousepressed(x, y, button)
@@ -43,13 +56,6 @@ function love.update(dt)
 end
 
 function love.draw()
-    -- just random testing lel
-    ui:place_marble(1, 'blue')
-    ui:place_marble(32, 'red')
-    ui:place_marble(117, 'yellow')
-    ui:place_marble(78, 'white')
-    ui:place_marble(40, 'green')
-    ui:place_marble(97, 'purple')
     ui:draw()
 end
 
