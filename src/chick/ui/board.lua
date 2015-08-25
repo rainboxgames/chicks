@@ -14,6 +14,7 @@ function Board.new()
         -- attributes
         board = love.graphics.newImage('assets/board.png'),
         light = love.graphics.newImage('assets/light.png'),
+        empty = love.graphics.newImage('assets/empty.png'),
         marbles = {
             blue = love.graphics.newImage('assets/blue.png'),
             green = love.graphics.newImage('assets/green.png'),
@@ -54,6 +55,14 @@ function Board:draw()
     -- draw plain board
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.draw(self.board, self.board_offset.x, self.board_offset.y)
+
+    -- draw empty slots
+    for t, _ in pairs(self.tiles) do
+        love.graphics.draw(self.empty,
+            self.tiles[t].x + self.tile_offset.x + self.board_offset.x,
+            self.tiles[t].y + self.tile_offset.y + self.board_offset.y,
+            0, 1, 1, self.radius, self.radius)
+    end
 
     -- draw marbles
     for t, c in pairs(self.marble_map) do
