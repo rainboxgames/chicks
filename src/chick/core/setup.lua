@@ -7,9 +7,9 @@
 -- file that was distributed with this source code.
 --
 
-local board = {}
+local setup = {}
 
-board[2] =
+setup[2] =
 {
                     1,
                    1, 1,
@@ -30,7 +30,7 @@ board[2] =
                             2
 }
 
-board[3] =
+setup[3] =
 {
                     1,
                    1, 1,
@@ -51,7 +51,7 @@ board[3] =
                             0
 }
 
-board[4] =
+setup[4] =
 {
                     1,
                    1, 1,
@@ -72,7 +72,7 @@ board[4] =
                             3
 }
 
-board[6] =
+setup[6] =
 {
                     1,
                    1, 1,
@@ -93,4 +93,4 @@ board[6] =
                             4
 }
 
-return board
+return setup
