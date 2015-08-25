@@ -9,6 +9,16 @@
 
 Board = {}
 
+Board.colors =
+{
+    blue = 1,
+    green = 2,
+    purple = 3,
+    red = 4,
+    white = 5,
+    yellow = 6
+}
+
 function Board.new()
     return setmetatable({
         -- attributes
@@ -76,7 +86,6 @@ function Board:draw()
 end
 
 function Board:place_marble(t, color)
-    assert(Board.colors[color] == nil, "invalid marble color.")
     self.marble_map[t] = color
 end
 
@@ -108,13 +117,3 @@ function Board:_highlight_tile(t)
         self.tiles[t].y + self.tile_offset.y + self.board_offset.y,
         0, 1, 1, self.radius, self.radius)
 end
-
-Board.colors =
-{
-    blue = 1,
-    green = 2,
-    purple = 3,
-    red = 4,
-    white = 5,
-    yellow = 6
-}
