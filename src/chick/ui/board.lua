@@ -43,23 +43,79 @@ function Board.new()
         radius = 22,
         radius2 = 484,
         board_offset = {x = 132, y = 20},
-        tile_offset = {x = 380, y = 28}
+        tile_offset = {x = 380, y = 28},
+
+        drag =
+        {
+            active = false,
+            tile = 0,
+            x = 0,
+            y = 0,
+            color = 0
+        }
 
     }, {__index = Board})
 end
 
+function Board:update_drag(x, y)
+    self.drag.x = x
+    self.drag.y = y
+end
+
+function Board:is_dragging()
+    return self.drag.active
+end
+
 function Board:on_mousedown(x, y)
     local xx, yy
+    -- for each marble on the board
+    for k, v in pairs(self.marble_map) do
+        xx = x - self.tiles[k].x - self.board_offset.x - self.tile_offset.x
+        yy = y - self.tiles[k].y - self.board_offset.y - self.tile_offset.y
+
+        if (math.abs(xx) <= self.radius) and (math.abs(yy) <= self.radius) then
+            if (xx * xx + yy * yy <= self.radius2) then
+
+                -- enable drag
+                self.drag.active = true
+                self.drag.tile = k
+                self.drag.x = self.tiles[k].x
+                self.drag.y = self.tiles[k].y
+                self.drag.color = v
+
+                -- strip the original marble
+                self:remove_marble(k)
+
+            end
+            -- no need to look further
+            break
+        end
+    end
+end
+
+function Board:on_mouserelease(x, y)
+    local xx, yy
+    -- for each tile on the board
     for k, v in pairs(self.tiles) do
         xx = x - v.x - self.board_offset.x - self.tile_offset.x
         yy = y - v.y - self.board_offset.y - self.tile_offset.y
+
         if (math.abs(xx) <= self.radius) and (math.abs(yy) <= self.radius) then
             if (xx * xx + yy * yy <= self.radius2) then
-                self:_highlight(k)
+
+                -- disable drag
+                self.drag.active = false
+
+                -- drop marble to initial position
+                self:place_marble(self.drag.tile, self.drag.color)
+
+                return self.drag.tile, k
+
             end
             break
         end
     end
+    return 0, 0
 end
 
 function Board:draw()
@@ -80,9 +136,18 @@ function Board:draw()
         self:_draw_marble(t, c)
     end
 
+    -- draw drag'n'drop marble
+    if self.drag.active then
+        love.graphics.setColor(255, 255, 255, 255)
+        love.graphics.draw(self.marbles[self.drag.color],
+            self.drag.x,
+            self.drag.y,
+            0, 1, 1, self.radius, self.radius)
+    end
+
     -- draw highlighted tiles
     for t, _ in pairs(self.highlights) do
-        self:_highlight_tile(t)
+        self:_draw_highlight(t)
     end
 end
 
@@ -92,6 +157,11 @@ end
 
 function Board:remove_marble(t)
     self.marble_map[t] = nil
+end
+
+function Board:move_marble(from, to)
+    self:place_marble(to, self.marble_map[from])
+    self:remove_marble(from)
 end
 
 function Board:_highlight(t)
@@ -111,7 +181,7 @@ function Board:_draw_marble(t, c)
         0, 1, 1, self.radius, self.radius)
 end
 
-function Board:_highlight_tile(t)
+function Board:_draw_highlight(t)
     love.graphics.setColor(255, 255, 255, 128)
     love.graphics.draw(self.light,
         self.tiles[t].x + self.tile_offset.x + self.board_offset.x,

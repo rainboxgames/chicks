@@ -55,13 +55,32 @@ end
 
 function love.mousepressed(x, y, button)
     if button == 'l' then
-        x, y = love.mouse.getPosition()
+        local x, y = love.mouse.getPosition()
         board:on_mousedown(x, y)
     end
 end
 
-function love.update(dt)
+function love.mousereleased(x, y, button)
+    if button == 'l' and board:is_dragging() then
+        local x, y = love.mouse.getPosition()
+        local from, to = board:on_mouserelease(x, y)
 
+        -- pass move to core
+        if from > 0 and to > 0 then
+            if (core:move(from, to)) then
+                board:move_marble(from, to)
+            else
+                print("(debug) core: illegal move.")
+            end
+        end
+    end
+end
+
+function love.update(dt)
+    if board:is_dragging() then
+        local x, y = love.mouse.getPosition()
+        board:update_drag(x, y)
+    end
 end
 
 function love.draw()
