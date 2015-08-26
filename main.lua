@@ -55,13 +55,16 @@ end
 
 function love.mousepressed(x, y, button)
     if button == 'l' then
+
         local x, y = love.mouse.getPosition()
         board:on_mousedown(x, y)
+
     end
 end
 
 function love.mousereleased(x, y, button)
     if button == 'l' and board:is_dragging() then
+
         local x, y = love.mouse.getPosition()
         local from, to = board:on_mouserelease(x, y)
 
@@ -73,6 +76,11 @@ function love.mousereleased(x, y, button)
                 print("(debug) core: illegal move.")
             end
         end
+
+    elseif button == 'r' then
+
+        core:play()
+
     end
 end
 

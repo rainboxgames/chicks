@@ -39,7 +39,7 @@ function Chick:move(from, to)
     end
 
     -- check if player is allowed to move that marble
-    -- source node is empty
+    -- initial source node is empty
     if self.board[from] == 0 then
         print("(debug) there is no marble.")
         return false
@@ -80,15 +80,23 @@ function Chick:move(from, to)
                 return false
             end
 
+            -- save current move to actual board map
+            self.board[from] = 0
+            self.board[to] = self.current_player
+            print("(debug) save move : " .. from .. " -> " .. to)
+
             -- update current move source and target
             if self.current_move.source == self.current_move.target then
                 -- new source
                 self.current_move.source = from
-                print("(debug) new source.")
+                print("(debug) update source : " .. from)
             end
             -- new target
             self.current_move.target = to
-            print("(debug) new target.")
+            print("(debug) update target : " .. to)
+
+            -- set simple move flag
+            self.current_move.simple = true
 
             return true
         end
@@ -97,6 +105,13 @@ function Chick:move(from, to)
     -- also handle the case where a simple move is taken back
     if self.current_move.simple and from == self.current_move.target and to == self.current_move.source then
         print("(debug) take back simple move.")
+
+        -- save current move to actual board map
+        self.board[from] = 0
+        self.board[to] = self.current_player
+        print("(debug) save move : " .. from .. " -> " .. to)
+
+        -- update current move target and unset the simple move flag
         self.current_move.target = self.current_move.source
         self.current_move.simple = false
 
@@ -249,17 +264,20 @@ function Chick:move(from, to)
 
     end
 
+    -- save current move to actual board map
+    self.board[from] = 0
+    self.board[to] = self.current_player
+    print("(debug) save move : " .. from .. " -> " .. to)
+
     -- update current move source and target
     if self.current_move.source == self.current_move.target then
         -- new source
         self.current_move.source = from
-        print("(debug) new source.")
+        print("(debug) update source : " .. from)
     end
     -- new target
     self.current_move.target = to
-    print("(debug) new target.")
-
-    print("(debug) current move : " .. self.current_move.source .. " -> " .. self.current_move.target)
+    print("(debug) update target : " .. to)
 
     return true
 end
@@ -271,9 +289,6 @@ function Chick:play()
         return 0
     end
 
-    -- save current move to actual board map
-    self.board[self.current_move.source] = 0
-    self.board[self.current_move.target] = self.current_player
     print("(debug) exec move " .. self.current_move.source .. " -> " .. self.current_move.target)
 
     -- reset current move cursors

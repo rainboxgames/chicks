@@ -109,6 +109,11 @@ function Board:on_mouserelease(x, y)
                 -- drop marble to initial position
                 self:place_marble(self.drag.tile, self.drag.color)
 
+                -- if source and target are equal just ignore it
+                if self.drag.tile == k then
+                    return 0, 0
+                end
+
                 return self.drag.tile, k
 
             end
