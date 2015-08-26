@@ -25,7 +25,8 @@ function Board.new()
         board = love.graphics.newImage('assets/board.png'),
         light = love.graphics.newImage('assets/light.png'),
         empty = love.graphics.newImage('assets/empty.png'),
-        marbles = {
+        marbles =
+        {
             love.graphics.newImage('assets/blue.png'),
             love.graphics.newImage('assets/green.png'),
             love.graphics.newImage('assets/purple.png'),

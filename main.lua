@@ -28,18 +28,27 @@ function love.load()
 
     -- load ui components
     require 'board'
-    ui = Board.new()
+    board = Board.new()
 
     -- load core module
     require 'chick'
     core = Chick.new(2)
 
-    -- example copy initial board map to ui
+    -- let's just copy initial board map to ui
     for k, v in pairs(core.board) do
+        -- map players to colors
         if v == 1 then
-            ui:place_marble(k, Board.colors.green)
+            board:place_marble(k, Board.colors.green)
         elseif v == 2 then
-            ui:place_marble(k, Board.colors.blue)
+            board:place_marble(k, Board.colors.blue)
+        elseif v == 3 then
+            board:place_marble(k, Board.colors.red)
+        elseif v == 4 then
+            board:place_marble(k, Board.colors.purple)
+        elseif v == 5 then
+            board:place_marble(k, Board.colors.yellow)
+        elseif v == 6 then
+            board:place_marble(k, Board.colors.white)
         end
     end
 end
@@ -47,7 +56,7 @@ end
 function love.mousepressed(x, y, button)
     if button == 'l' then
         x, y = love.mouse.getPosition()
-        ui:on_mousedown(x, y)
+        board:on_mousedown(x, y)
     end
 end
 
@@ -56,7 +65,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    ui:draw()
+    board:draw()
 end
 
 function love.conf(t)
