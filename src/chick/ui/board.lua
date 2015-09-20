@@ -23,7 +23,7 @@ function Board.new()
     return setmetatable({
         -- attributes
         board = love.graphics.newImage('assets/board.png'),
-        light = love.graphics.newImage('assets/light.png'),
+        --light = love.graphics.newImage('assets/light.png'),
         empty = love.graphics.newImage('assets/empty.png'),
         marbles =
         {
