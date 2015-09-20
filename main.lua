@@ -71,6 +71,7 @@ function love.mousereleased(x, y, button)
         -- pass move to core
         if from > 0 and to > 0 then
             if (core:move(from, to)) then
+                -- pass move to ui
                 board:move_marble(from, to)
             else
                 print("(debug) core: illegal move.")
