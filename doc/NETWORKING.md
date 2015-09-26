@@ -99,6 +99,24 @@ Leave.
 
 #### Client-side
 
+#### `SUC`
+
+```
+SUC
+```
+
+Indicate that the previous command was successful.
+
+#### `ERR`
+
+```
+ERR <reason>
+```
+
+Indicate that the previous command failed.
+
+- `reason` is a short message that describes what went wrong.
+
 #### `MOV`
 
 ```
