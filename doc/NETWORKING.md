@@ -71,7 +71,7 @@ Make a move.
 RDY
 ```
 
-Tell the server that you're ready.
+Toggle ready.
 
 #### `PLY`
 
@@ -87,7 +87,7 @@ Finalize your moves.
 NFO
 ```
 
-Get some information. If you're in a room, it requires a list of all connected players. Otherwise it requires a list of all available rooms.
+List all available rooms.
 
 #### `BYE`
 
