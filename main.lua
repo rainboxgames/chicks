@@ -24,7 +24,7 @@ function love.load()
     love.window.setTitle('chick')
 
     -- add module directories to lua path
-    package.path = "src/chick/core/?.lua;src/chick/net/?.lua;src/chick/ui/?.lua;" .. package.path
+    package.path = "src/chick/core/?.lua;src/chick/net/?.lua;src/chick/ui/?.lua;src/chick/utils/?.lua;" .. package.path
 
     -- load ui components
     require 'board'
@@ -33,6 +33,9 @@ function love.load()
     -- load core module
     require 'chick'
     core = Chick.new(2)
+
+    -- luasocket
+    socket = require 'socket'
 
     -- let's just copy initial board map to ui
     for k, v in pairs(core.board) do
@@ -50,6 +53,16 @@ function love.load()
         elseif v == 6 then
             board:place_marble(k, Board.colors.white)
         end
+    end
+
+    print("(debug) test")
+    local host, port = '127.0.0.1', 44444
+    client = socket.connect(host, port)
+    local peer = host .. ':' .. port
+    if client then
+        print("(debug) connected to server " .. peer)
+    else
+        error("(debug) could not connect to server.")
     end
 end
 
@@ -73,6 +86,9 @@ function love.mousereleased(x, y, button)
             if (core:move(from, to)) then
                 -- pass move to ui
                 board:move_marble(from, to)
+
+                -- test network
+                client:send('MOV ' .. from .. ' ' .. to .. "\r\n")
             else
                 print("(debug) core: illegal move.")
             end
@@ -81,6 +97,8 @@ function love.mousereleased(x, y, button)
     elseif button == 'r' then
 
         core:play()
+
+        client:send('PLY' .. "\r\n")
 
     end
 end
