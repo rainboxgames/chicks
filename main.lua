@@ -59,10 +59,21 @@ function love.load()
     local host, port = '127.0.0.1', 44444
     client = socket.connect(host, port)
     local peer = host .. ':' .. port
+
+    -- set block timeout
+    client:settimeout(0.01)
+
     if client then
         print("(debug) connected to server " .. peer)
+
+        -- receive player id
+        repeat
+            id = client:receive()
+        until id
+        print("(debug) id: " .. id)
+
     else
-        error("(debug) could not connect to server.")
+        error("(debug) could not connect to server " .. peer)
     end
 end
 
@@ -96,9 +107,9 @@ function love.mousereleased(x, y, button)
 
     elseif button == 'r' then
 
-        core:play()
-
-        client:send('PLY' .. "\r\n")
+        if core:play() ~= 0 then
+            client:send('PLY' .. "\r\n")
+        end
 
     end
 end
@@ -107,6 +118,13 @@ function love.update(dt)
     if board:is_dragging() then
         local x, y = love.mouse.getPosition()
         board:update_drag(x, y)
+    end
+
+    -- receive data
+    data = client:receive()
+    -- process received data
+    if data then
+        print("(debug) recv data: " .. data)
     end
 end
 

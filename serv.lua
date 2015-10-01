@@ -16,30 +16,37 @@ copas = require 'copas'
 require 'chick'
 require 'explode'
 
-core = Chick.new(2)
-peers = {}
+local core = Chick.new(2)
+local peers = {}
+local connections = 0
+
+local function broadcast(msg)
+    -- for each peer
+    for p, _ in pairs(peers) do
+        -- append new message to outbox array
+        peers[p].outbox[#peers[p].outbox+1] = msg
+    end
+end
 
 local function handle(sock)
     local addr, port = sock:getpeername()
     local peer = addr .. ':' .. port
     print("(debug) in sock handler", peer)
 
-    -- first is room admin
-    if peers == {} then
-        peers = {
-            turn = true,
-            admin = true
-        }
-    else
-        peers[peer] = {
-            turn = false,
-            admin = false
-        }
-    end
+    -- count connections
+    connections = connections + 1
+    -- peer specific info
+    peers[peer] = {
+        id = connections,
+        outbox = {}
+    }
 
+    -- send player id
+    copas.send(sock, peers[peer].id .. "\r\n")
 
     while true do
         repeat
+            -- receive part
             local data = copas.receive(sock)
             if data then
                 local pieces = explode(' ', data)
@@ -50,8 +57,15 @@ local function handle(sock)
                         break
                     end
                     local from, to = tonumber(pieces[2]), tonumber(pieces[3])
+                    if core.current_player ~= peers[peer].id then
+                        print("(debug) [" .. peer .. "] not his turn.")
+                        break
+                    end
                     if (core:move(from, to)) then
                         print("(debug) [" .. peer .. "] ! move " .. from .. ' -> ' .. to)
+                        -- broadcast new move
+                        broadcast(data)
+
                     else
                         print("(debug) [" .. peer .. "] illegal move.")
                     end
@@ -67,6 +81,12 @@ local function handle(sock)
                     print("(debug) [" .. peer .. "] something else.")
                 end
             end
+
+            -- send part
+            for i = 1, #peers[peer].outbox do
+                copas.send(sock, peers[peer].outbox[i] .. "\r\n")
+            end
+
         until true
     end
 end
