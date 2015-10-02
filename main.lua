@@ -37,6 +37,9 @@ function love.load()
     -- luasocket
     socket = require 'socket'
 
+    -- utils
+    require 'explode'
+
     -- let's just copy initial board map to ui
     for k, v in pairs(core.board) do
         -- map players to colors
@@ -125,6 +128,32 @@ function love.update(dt)
     -- process received data
     if data then
         print("(debug) recv data: " .. data)
+
+        local pieces = explode(' ', data)
+        local verb = pieces[1]
+
+        if verb == 'MOV' then
+            if #pieces ~= 3 then
+                print("(debug) illegal command from server.")
+                return
+            end
+            local from, to = tonumber(pieces[2]), tonumber(pieces[3])
+            if (core:move(from, to)) then
+                board:move_marble(from, to)
+            else
+                print("(debug) core: illegal move.")
+                return
+            end
+        elseif verb == 'PLY' then
+            if #pieces ~= 1 then
+                print("(debug) illegal command from server.")
+                return
+            end
+            core:play()
+        else
+            print("(debug) server is high.")
+            return
+        end
     end
 end
 

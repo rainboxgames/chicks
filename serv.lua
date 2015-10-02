@@ -20,11 +20,11 @@ local core = Chick.new(2)
 local peers = {}
 local connections = 0
 
+local sockets = {}
+
 local function broadcast(msg)
-    -- for each peer
-    for p, _ in pairs(peers) do
-        -- append new message to outbox array
-        peers[p].outbox[#peers[p].outbox+1] = msg
+    for _, s in pairs(sockets) do
+        copas.send(s, msg .. "\r\n")
     end
 end
 
@@ -32,6 +32,9 @@ local function handle(sock)
     local addr, port = sock:getpeername()
     local peer = addr .. ':' .. port
     print("(debug) in sock handler", peer)
+
+    -- save socket
+    sockets[peer] = sock
 
     -- count connections
     connections = connections + 1
@@ -68,6 +71,7 @@ local function handle(sock)
 
                     else
                         print("(debug) [" .. peer .. "] illegal move.")
+                        break
                     end
                 elseif verb == 'PLY' then
                     if #pieces ~= 1 then
@@ -79,12 +83,8 @@ local function handle(sock)
                     end
                 else
                     print("(debug) [" .. peer .. "] something else.")
+                    break
                 end
-            end
-
-            -- send part
-            for i = 1, #peers[peer].outbox do
-                copas.send(sock, peers[peer].outbox[i] .. "\r\n")
             end
 
         until true
@@ -103,7 +103,7 @@ local function serve()
 
     ]])
     -- create server socket
-    local host, port = '127.0.0.1', 44444
+    local host, port = '*', 44444
     local server = socket.bind(host, port)
     if server then
         print("(debug) server listening on " .. host .. ':' .. port)
