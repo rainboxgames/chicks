@@ -59,7 +59,7 @@ function love.load()
     end
 
     print("(debug) test")
-    local host, port = '127.0.0.1', 44444
+    local host, port = 'chix', 44444
     client = socket.connect(host, port)
     local peer = host .. ':' .. port
 
