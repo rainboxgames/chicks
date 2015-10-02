@@ -66,7 +66,7 @@ local function handle(sock)
                     end
                     if (core:move(from, to)) then
                         print("(debug) [" .. peer .. "] ! move " .. from .. ' -> ' .. to)
-                        -- broadcast new move
+
                         broadcast(data)
 
                     else
@@ -80,6 +80,8 @@ local function handle(sock)
                     end
                     if (core:play()) then
                         print("(debug) [" .. peer .. "] ! play")
+
+                        broadcast(data)
                     end
                 else
                     print("(debug) [" .. peer .. "] something else.")
