@@ -60,8 +60,11 @@ function love.load()
 
     print("(debug) test")
     local host, port = 'chix', 44444
-    client = socket.connect(host, port)
     local peer = host .. ':' .. port
+    client = socket.connect(host, port)
+    if client == nil then
+        error("(debug) could not connect to server " .. peer)
+    end
 
     -- set block timeout
     client:settimeout(0.01)
@@ -73,6 +76,10 @@ function love.load()
         repeat
             id = client:receive()
         until id
+        id = tonumber(id)
+        if id == nil then
+            error("(debug) invalid id from server.")
+        end
         print("(debug) id: " .. id)
 
     else
