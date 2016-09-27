@@ -9,12 +9,28 @@
 
 package.path = package.path .. ';lib/?/?.lua;src/chicks/?.lua'
 
+--
+-- LIBS
+--
 class           = require 'middleclass'
+
+--
+-- HELPERS
+--
 print_r         = require 'print_r'
 explode         = require 'explode'
 log             = require 'log'
 
-local function main()
+--
+-- CLASSES
+--
+App             = require 'app'
+Board           = require 'board'
+Engine          = require 'engine'
+Player          = require 'player'
+Target          = require 'target'
+
+function love.load()
     log.info([[
 
     _________ .__    .__        __
@@ -25,6 +41,29 @@ local function main()
             \/     \/        \/     \/     \/
 
     ]])
+
+    -- window settings
+    love.window.setMode(1024, 800)
+    love.window.setTitle("Chicks - Rainboxgames")
+
+    app = App()
 end
 
-main()
+function love.update(dt)
+    app:update(dt)
+end
+
+function love.draw()
+    app:draw()
+end
+
+function love.conf(t)
+    -- anti-aliasing
+    t.window.fsaa = 4
+end
+
+function love.mousepressed(x, y, button)
+end
+
+function love.mousereleased(x, y, button)
+end
