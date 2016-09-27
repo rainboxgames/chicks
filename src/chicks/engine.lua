@@ -9,37 +9,45 @@
 
 local Engine = class('Engine')
 
-function Engine:initialize(board, number_of_players, number_of_colors, current_player)
+function Engine:initialize(board, players, current_player_id)
+    current_player_id = current_player_id or 1
+
+    local number_of_players = #players
     assert(number_of_players == 2
         or number_of_players == 3
         or number_of_players == 4
         or number_of_players == 6,
-        "Illegal number of players: must be 2, 3, 4, or 6")
-    assert(number_of_colors == number_of_players
-        or number_of_colors == 4 and number_of_players == 2
-        or number_of_colors == 6 and number_of_players == 2
-        or number_of_colors == 6 and number_of_players == 3,
-        "Illegal number of colors")
-    assert(1 <= current_player and current_player <= number_of_players,
-        "Illegal current player")
+        "Illegal number of players: must be 2, 3, 4, or 6.")
+
+    assert(1 <= current_player_id and current_player_id <= number_of_players, "Illegal current player.")
 
     self.__board = board
+    self.__players = players
+    self.__current_player_id = current_player_id
     self.__number_of_players = number_of_players
-    self.__number_of_colors = number_of_colors
-    self.__current_player = current_player
     self.__current_move = {
         source = 0,
         target = 0,
         simple = false
     }
+    self.__winner = 0
+end
+
+function Engine:reset_board()
+    for i, player in pairs(self.__players) do
+        for j, target in pairs(player:get_targets()) do
+            local color = target:get_color()
+            for k, tile in pairs(target:get_home()) do
+                self.__board:place(tile, color)
+            end
+        end
+    end
 end
 
 function Engine:move(from, to)
-    -- valid nodes
-    if from < 1 or from > self.__board.MAX_TILES or to < 1 or to > self.__board.MAX_TILES then
-        log.debug("Move has invalid nodes.")
-        return false
-    end
+    -- fetch marble color
+    local marble = self.__board:get_color_by_pos(from)
+    log.debug("marble = " .. marble)
 
     -- detect null move
     if from == to then
@@ -48,12 +56,7 @@ function Engine:move(from, to)
     end
 
     -- check if player is allowed to move that marble
-    -- initial source node is empty or occupied by another player
-    if self.__board[from] == self.__board.MARBLES.empty then
-        log.debug("There is no marble.")
-        return false
-    end
-    if self.__board[from] ~= self.__player_to_color(self.__current_player) then
+    if not self:__get_current_player():has_color(marble) then
         log.debug("You can't touch that marble.")
         return false
     end
@@ -68,38 +71,23 @@ function Engine:move(from, to)
     -- special case: simple move
     -- make sure simple move is still allowed (i.e., first move)
     if self.__current_move.source == self.__current_move.target then
+        local src_vec = Board:pos_to_xyz(from)
+        local tar_vec = Board:pos_to_xyz(to)
         local delta = {
-            x = self.__board.REVERSE_AXIS_MAP[to].x - self.__board.REVERSE_AXIS_MAP[from].x,
-            y = self.__board.REVERSE_AXIS_MAP[to].y - self.__board.REVERSE_AXIS_MAP[from].y,
-            z = self.__board.REVERSE_AXIS_MAP[to].z - self.__board.REVERSE_AXIS_MAP[from].z
+            x = tar_vec.x - src_vec.x,
+            y = tar_vec.y - src_vec.y,
+            z = tar_vec.z - src_vec.z
         }
 
+        -- detect simple move
         if math.abs(delta.x) + math.abs(delta.y) + math.abs(delta.z) == 2 then
-            -- simple move detected
             log.debug("Simple move detected.")
-            -- make sure target node is clear
-            if self.__board[to] ~= 0 then
-                log.debug("Adjacent target node is not clear.")
-                return false
-            end
 
-            -- save current move to actual board map
-            self.__board[from] = self.__board.MARBLES.empty
-            self.__board[to] = self.__player_to_color(self.__current_player)
-            log.debug("Save move: " .. from .. " --> " .. to)
+            -- save move to board
+            if not self:__save_to_board(from, to, marble) then return false end
 
-            -- update current move source and target
-            if self.__current_move.source == self.__current_move.target then
-                -- new source
-                self.__current_move.source = from
-                log.debug("Update source: " .. from)
-            end
-            -- new target
-            self.__current_move.target = to
-            log.debug("Update target: " .. to)
-
-            -- set simple move flag
-            self.__current_move.simple = true
+            -- update current move source and target and set simple move flag
+            self:__update_current_move(from, to, true)
 
             return true
         end
@@ -109,182 +97,187 @@ function Engine:move(from, to)
     if self.__current_move.simple and from == self.__current_move.target and to == self.__current_move.source then
         log.debug("Take back simple move.")
 
-        -- save current move to actual board map
-        self.__board[from] = self.__board.MARBLES.empty
-        self.__board[to] = self.__player_to_color(self.__current_player)
-        log.debug("Save move: " .. from .. " --> " .. to)
+        -- save move to board
+        if not self:__save_to_board(from, to, marble) then return false end
 
-        -- update current move target and unset the simple move flag
-        self.__current_move.target = self.__current_move.source
-        self.__current_move.simple = false
+        -- update current move source and target and unset simple move flag
+        self:__update_current_move(from, to, false)
 
         return true
     end
 
-    -- jump move
+    -- regular jump move
+
     -- get source and target vectors
-    local src_vec = self.__board.REVERSE_AXIS_MAP[from]
-    local tar_vec = self.__board.REVERSE_AXIS_MAP[to]
+    local src_vec = Board:pos_to_xyz(from)
+    local tar_vec = Board:pos_to_xyz(to)
 
-    -- make sure the jump is symmetric
+    -- these are needed later
+    local jump_dir
+    local pivot_dir
+
+    -- determine jump direction and pivot direction
     if src_vec.x == tar_vec.x then
-
-        -- jump in x direction
-        log.debug("X jump.")
-        local ydelta = math.abs(src_vec.y - tar_vec.y)
-
-        -- number of nodes between source and target must be odd
-        if ydelta % 2 == 1 then
-            log.debug("Even number of nodes between source and target.")
-            return false
-        end
-
-        -- calc center node
-        local yc = (src_vec.y + tar_vec.y) / 2
-        local center = self.__board.axis_intersect({x = src_vec.x, y = yc})[1]
-        log.debug("center = " .. center)
-
-        -- center node must not be void
-        if self.__board[self.__board.axis_intersect(self.__board.REVERSE_AXIS_MAP[center])[1]] == self.__board.MARBLES.empty then
-            log.debug("Center node is void.")
-            return false
-        end
-
-        -- up or down flag
-        local upordown = src_vec.y > tar_vec.y and -1 or 1
-        log.debug("upordown = " .. upordown)
-        -- check if path is clear
-        for j = src_vec.y + upordown, yc - upordown, upordown do
-            local intersection = self.__board.axis_intersect({x = src_vec.x, y = j})[1]
-            log.debug("Checking node " .. intersection)
-            if self.__board[intersection] ~= 0 then
-                log.debug("X segment is not clear.")
-                return false
-            end
-        end
-        for j = yc + upordown, tar_vec.y, upordown do
-            local intersection = self.__board.axis_intersect({x = src_vec.x, y = j})[1]
-            log.debug("Checking node " .. intersection)
-            if self.__board[intersection] ~= 0 then
-                log.debug("X segment is not clear.")
-                return false
-            end
-        end
-
+        jump_dir = 'x'
+        pivot_dir = 'y'
     elseif src_vec.y == tar_vec.y then
-
-        -- jump in y direction
-        log.debug("Y jump.")
-        local xdelta = math.abs(src_vec.x - tar_vec.x)
-
-        -- number of nodes between source and target must be odd
-        if xdelta % 2 == 1 then
-            log.debug("Even number of nodes between source and target.")
-            return false
-        end
-
-        -- calc center node
-        local xc = (src_vec.x + tar_vec.x) / 2
-        local center = self.__board.axis_intersect({x = xc, y = src_vec.y})[1]
-        log.debug("center = " .. center)
-
-        -- center node must not be void
-        if self.__board[self.__board.axis_intersect(self.__board.REVERSE_AXIS_MAP[center])[1]] == self.__board.MARBLES.empty then
-            log.debug("Center node is void.")
-            return false
-        end
-
-        -- up or down flag
-        local upordown = src_vec.x > tar_vec.x and -1 or 1
-        log.debug("upordown = " .. upordown)
-        -- check if path is clear
-        for j = src_vec.x + upordown, xc - upordown, upordown do
-            local intersection = self.__board.axis_intersect({x = j, y = src_vec.y})[1]
-            log.debug("Checking node " .. intersection)
-            if self.__board[intersection] ~= 0 then
-                log.debug("Y segment is not clear.")
-                return false
-            end
-        end
-        for j = xc + upordown, tar_vec.x, upordown do
-            local intersection = self.__board.axis_intersect({x = j, y = src_vec.y})[1]
-            log.debug("Checking node " .. intersection)
-            if self.__board[intersection] ~= 0 then
-                log.debug("Y segment is not clear.")
-                return false
-            end
-        end
-
+        jump_dir = 'y'
+        pivot_dir = 'x'
     elseif src_vec.z == tar_vec.z then
-
-        -- jump in z direction
-        log.debug("Z jump")
-        local ydelta = math.abs(src_vec.y - tar_vec.y)
-
-        -- number of nodes between source and target must be odd
-        if ydelta % 2 == 1 then
-            log.debug("Even number of nodes between source and target.")
-            return false
-        end
-
-        -- calc center node
-        local yc = (src_vec.y + tar_vec.y) / 2
-        local center = self.__board.axis_intersect({y = yc, z = src_vec.z})[1]
-        log.debug("center = " .. center)
-
-        -- center node must not be void
-        if self.__board[self.__board.axis_intersect(self.__board.REVERSE_AXIS_MAP[center])[1]] == self.__board.MARBLES.empty then
-            log.debug("Center node is void.")
-            return false
-        end
-
-        -- up or down flag
-        local upordown = src_vec.y > tar_vec.y and -1 or 1
-        log.debug("upordown = " .. upordown)
-        -- check if path is clear
-        for j = src_vec.y + upordown, yc - upordown, upordown do
-            local intersection = self.__board.axis_intersect({y = j, z = src_vec.z})[1]
-            log.debug("Checking node " .. intersection)
-            if self.__board[intersection] ~= 0 then
-                log.debug("Z segment is not clear.")
-                return false
-            end
-        end
-        for j = yc + upordown, tar_vec.y, upordown do
-            local intersection = self.__board.axis_intersect({y = j, z = src_vec.z})[1]
-            log.debug("Checking node " .. intersection)
-            if self.__board[intersection] ~= 0 then
-                log.debug("Z segment is not clear.")
-                return false
-            end
-        end
-
+        jump_dir = 'z'
+        pivot_dir = 'y'
     else
-
-        -- source and target are not aligned
         log.debug("Source and target are not aligned.")
         return false
+    end
+    log.debug("jump_dir = " .. jump_dir)
+    log.debug("pivot_dir = " .. pivot_dir)
 
+    -- calc pivot delta
+    delta = math.abs(src_vec[pivot_dir] - tar_vec[pivot_dir])
+    log.debug("delta = " .. delta)
+
+    -- number of nodes between source and target must be odd
+    if delta % 2 == 1 then
+        log.debug("Even number of nodes between source and target.")
+        return false
     end
 
-    self.__board[from] = self.__board.MARBLES.empty
-    self.__board[to] = self.__player_to_color(self.__current_player)
-    log.debug("Save move: " .. from .. " --> " .. to)
+    -- calc up or down flag
+    local upordown = src_vec[pivot_dir] > tar_vec[pivot_dir] and -1 or 1
+    log.debug("upordown = " .. upordown)
 
-    -- update current move source and target
-    if self.__current_move.source == self.__current_move.target then
-        -- new source
-        self.__current_move.source = from
-        log.debug("Update source: " .. from)
+    -- calc center
+    local c = (src_vec[pivot_dir] + tar_vec[pivot_dir]) / 2
+    local center = Board:xyz_to_pos({x = src_vec[jump_dir], y = c})
+    log.debug("center = " .. center)
+
+    -- check center is occupied
+    if self.__board:get_color_by_pos(center) == Board.MARBLES.empty then
+        log.debug("Center tile is void.")
+        return false
     end
-    -- new target
-    self.__current_move.target = to
-    log.debug("Update target: " .. to)
+
+    -- check if segment is clear otherwise
+    for j = src_vec[pivot_dir] + upordown, c - upordown, upordown do
+        local intersection_xyz = {}
+        intersection_xyz[jump_dir] = src_vec[jump_dir]
+        intersection_xyz[pivot_dir] = j
+        local intersection = Board:xyz_to_pos(intersection_xyz)
+        if self.__board:get_color_by_pos(intersection) ~= Board.MARBLES.empty then
+            log.debug(jump_dir .. " segment is not clear.")
+            return false
+        end
+    end
+    for j = c + upordown, tar_vec[pivot_dir], upordown do
+        local intersection_xyz = {}
+        intersection_xyz[jump_dir] = src_vec[jump_dir]
+        intersection_xyz[pivot_dir] = j
+        local intersection = Board:xyz_to_pos(intersection_xyz)
+        if self.__board:get_color_by_pos(intersection) ~= Board.MARBLES.empty then
+            log.debug(jump_dir .. " segment is not clear.")
+            return false
+        end
+    end
+
+    -- save move to board
+    if not self:__save_to_board(from, to, marble) then return false end
+
+    -- update current move source and target and unset simple move flag
+    self:__update_current_move(from, to, false)
 
     return true
 end
 
 function Engine:finish()
+    -- make sure current move chain is not null or a cycle
+    if self.__current_move.source == self.__current_move.target then
+        log.debug("Null or cyclic move chain.")
+        return false
+    end
+
+    log.debug("Finish " .. self.__current_move.source .. " --> " .. self.__current_move.target)
+
+    -- reset current move cursors
+    self.__current_move.source = 0
+    self.__current_move.target = 0
+    self.__current_move.simple = false
+
+    -- look for a win
+    self:__look_for_win()
+
+    -- go to next turn
+    self:__next()
+
+    return true
+end
+
+function Engine:get_winner()
+    if self.__winner == 0 then
+        return false
+    else
+        return self.__players[self.__winner]
+    end
+end
+
+function Engine:__get_current_player()
+    return self.__players[self.__current_player_id]
+end
+
+function Engine:__look_for_win()
+    for i, player in pairs(self.__players) do
+        local win = true
+        for j, target in pairs(player:get_targets()) do
+            local color = target:get_color()
+            for k, tile in pairs(target:get_away()) do
+                if self.__board:get_color_by_pos(tile) ~= color then
+                    win = false
+                    break
+                end
+            end
+            -- player needs to finish all targets to win
+            if not win then break end
+        end
+        -- we found a winner
+        if win then break end
+    end
+    return win
+end
+
+function Engine:__next()
+    self.__current_player_id = self.__current_player_id % self.__number_of_players + 1
+end
+
+function Engine:__update_current_move(from, to, simple_move_flag)
+    if self.__current_move.source == self.__current_move.target then
+        -- new source
+        self.__current_move.source = from
+        log.debug("Update current source: " .. from)
+    end
+    -- new target
+    self.__current_move.target = to
+    log.debug("Update current target: " .. to)
+
+    -- set simple move flag
+    self.__current_move.simple = simple_move_flag
+    log.debug("Update simple move flag: " .. tostring(simple_move_flag))
+end
+
+function Engine:__save_to_board(from, to, marble)
+    -- grab marble
+    if not self.__board:remove(from) then
+        log.debug("Board says no.")
+        return false
+    end
+
+    -- place marble
+    if not self.__board:place(to, marble) then
+        log.debug("Board says no.")
+        return false
+    end
+
+    log.debug("Move " .. from .. " --> " .. to)
+    return true
 end
 
 return Engine
