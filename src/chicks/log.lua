@@ -16,15 +16,24 @@ local green = c27 .. '[' .. tostring(32) .. 'm'
 local yellow = c27 .. '[' .. tostring(33) .. 'm'
 
 function log.info(msg)
-    print(green .. "[info ]  " .. msg .. reset)
+    msg = explode("\n", msg)
+    for _, v in pairs(msg) do
+        print(green .. "[info ]  " .. v .. reset)
+    end
 end
 
 function log.error(msg)
-    print(red .. "[error]  " .. msg .. reset)
+    msg = explode("\n", msg)
+    for _, v in pairs(msg) do
+        print(red .. "[error]  " .. v .. reset)
+    end
 end
 
 function log.debug(msg)
-    print(yellow .. "[debug]  " .. msg .. reset)
+    msg = explode("\n", msg)
+    for _, v in pairs(msg) do
+        print(yellow .. "[debug]  " .. v .. reset)
+    end
 end
 
 return log
