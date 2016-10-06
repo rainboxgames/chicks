@@ -1,5 +1,5 @@
 --[[
--- This file is part of rainboxgames/chicks.
+-- This file is part of chicks.
 --
 -- (c) 2015-2016 YouniS Bensalah <younis.bensalah@gmail.com>
 --
