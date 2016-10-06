@@ -1,5 +1,5 @@
 --[[
--- This file is part of rainboxgames/chicks.
+-- This file is part of chicks.
 --
 -- (c) 2015-2016 YouniS Bensalah <younis.bensalah@gmail.com>
 --
@@ -9,7 +9,10 @@
 
 local App = class('App')
 
+App.WINDOW = { w = 1200, h = 800 }
+
 function App:initialize()
+    --[[
     -- these are sample players just for testing
     -- TODO set up players from user input
     -- init players
@@ -48,14 +51,71 @@ function App:initialize()
 
     self.__engine:move(6, 17)
     self.__engine:finish()
+    self.__engine:move(115, 93)
+    self.__engine:finish()
+    --]]
+
+
+end
+
+function App:load()
+    log.info([[
+
+    _________ .__    .__        __
+    \_   ___ \|  |__ |__| ____ |  | __  ______
+    /    \  \/|  |  \|  |/ ___\|  |/ / /  ___/
+    \     \___|   Y  \  \  \___|    <  \___ \
+     \______  /___|  /__|\___  >__|_ \/____  >
+            \/     \/        \/     \/     \/
+
+    ]])
+    log.info("Version " .. CHICKS_VERSION)
+
+    love.window.setMode(App.WINDOW.w, App.WINDOW.h)
+    love.window.setTitle("Chicks " .. CHICKS_VERSION)
 end
 
 function App:update(dt)
+    --[[
+    suit.layout:reset(300, 100)
+    suit.layout:padding(10, 10)
+
+    suit.Button("Play", suit.layout:row(300, 60))
+    suit.Button("Credits", suit.layout:row(300, 60))
+    if suit.Button("Quit", suit.layout:row(300, 60)).hit then love.event.quit() end
+    --]]
+
+
 end
 
 function App:draw()
+    suit.draw()
 end
 
+function App:textinput(t)
+end
+
+function App:keypressed(key)
+end
+
+function App:mousepressed(x, y, button)
+end
+
+function App:mousereleased(x, y, button)
+end
+
+function App:conf(t)
+    -- anti-aliasing
+    t.window.fsaa = 4
+end
+
+function App:quit()
+    log.info("Bye.")
+    return false
+end
+
+
+--[[
 App.TILES = {
     {y = 704,   x = 0},
     {y = 660,   x = 25},
@@ -179,5 +239,6 @@ App.TILES = {
     {y = 44,    x = -25},
     {y = 0,     x = 0}
 }
+]]
 
 return App
