@@ -1,5 +1,5 @@
 --[[
--- This file is part of rainboxgames/chicks.
+-- This file is part of chicks.
 --
 -- (c) 2015-2016 YouniS Bensalah <younis.bensalah@gmail.com>
 --
@@ -7,46 +7,33 @@
 -- file that was distributed with this source code.
 --]]
 
-package.path = package.path .. ';lib/?/?.lua;src/chicks/?.lua'
+CHICKS_VERSION = '1.0-dev'
 
---
+package.path = package.path .. ';src/?.lua;lib/?.lua;lib/?/?.lua;lib/?/init.lua'
+
 -- LIBS
---
 class           = require 'middleclass'
+suit            = require 'suit'
+copas           = require 'copas'
+socket          = require 'socket'
 
---
--- HELPERS
---
-print_r         = require 'print_r'
-explode         = require 'explode'
-log             = require 'log'
-
---
 -- CLASSES
---
-App             = require 'app'
-Board           = require 'board'
-Engine          = require 'engine'
-Player          = require 'player'
-Target          = require 'target'
+App             = require 'ui.app'
+Game            = require 'core.game'
+Engine          = require 'core.engine'
+Board           = require 'core.board'
+Player          = require 'core.player'
+Target          = require 'core.target'
+
+-- HELPERS
+print_r         = require 'helpers.print_r'
+explode         = require 'helpers.explode'
+log             = require 'helpers.log'
+
+local app = App()
 
 function love.load()
-    log.info([[
-
-    _________ .__    .__        __
-    \_   ___ \|  |__ |__| ____ |  | __  ______
-    /    \  \/|  |  \|  |/ ___\|  |/ / /  ___/
-    \     \___|   Y  \  \  \___|    <  \___ \
-     \______  /___|  /__|\___  >__|_ \/____  >
-            \/     \/        \/     \/     \/
-
-    ]])
-
-    -- window settings
-    love.window.setMode(1024, 800)
-    love.window.setTitle("Chicks - Rainboxgames")
-
-    app = App()
+    app:load()
 end
 
 function love.update(dt)
@@ -57,13 +44,26 @@ function love.draw()
     app:draw()
 end
 
-function love.conf(t)
-    -- anti-aliasing
-    t.window.fsaa = 4
+function love.textinput(t)
+    app:textinput(t)
+end
+
+function love.keypressed(key)
+    app:keypressed(key)
 end
 
 function love.mousepressed(x, y, button)
+    app:mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button)
+    app:mousereleased(x, y, button)
+end
+
+function love.conf(t)
+    app:conf(t)
+end
+
+function love.quit()
+    return app:quit()
 end
