@@ -19,7 +19,6 @@ socket          = require 'socket'
 
 -- CLASSES
 App             = require 'ui.app'
-Game            = require 'core.game'
 Engine          = require 'core.engine'
 Board           = require 'core.board'
 Player          = require 'core.player'
