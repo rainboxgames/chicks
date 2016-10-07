@@ -12,50 +12,30 @@ local App = class('App')
 App.WINDOW = { w = 1200, h = 800 }
 
 function App:initialize()
-    --[[
-    -- these are sample players just for testing
-    -- TODO set up players from user input
-    -- init players
-    self.__players = {
-        Player("neo", {
-            Target(Board.TRIANGLES.a, Board.TRIANGLES.d, Board.MARBLES.green)
-        }),
-        Player("akaisora", {
-            Target(Board.TRIANGLES.d, Board.TRIANGLES.a, Board.MARBLES.red)
-        })
-    }
+    self.__state_machine = StateMachine('main_menu', {
+        'main_menu',
+        'credits',
+        'play_menu',
+        'local_game_menu',
+        'online_game_menu',
+        'ingame',
+        'abort_game_confirm_menu',
+        'quit_confirm_menu'})
 
-    -- init board
-    self.__board = Board()
-
-    -- init engine
-    self.__engine = Engine(self.__board, self.__players)
-
-    -- reset board to new game
-    self.__engine:reset_board()
-
-    -- load assets
-    self.__assets = {
-        board   = love.graphics.newImage('assets/images/board.png'),
-        empty   = love.graphics.newImage('assets/images/empty.png'),
-        blue    = love.graphics.newImage('assets/images/blue.png'),
-        green   = love.graphics.newImage('assets/images/green.png'),
-        purple  = love.graphics.newImage('assets/images/purple.png'),
-        red     = love.graphics.newImage('assets/images/red.png'),
-        white   = love.graphics.newImage('assets/images/white.png'),
-        yellow  = love.graphics.newImage('assets/images/yellow.png')
-    }
-
-    -- testing
-    log.debug("Testing...")
-
-    self.__engine:move(6, 17)
-    self.__engine:finish()
-    self.__engine:move(115, 93)
-    self.__engine:finish()
-    --]]
-
-
+    self.__state_machine:map('main_menu', 'play_button', 'play_menu')
+    self.__state_machine:map('main_menu', 'credits_button', 'credits')
+    self.__state_machine:map('main_menu', 'quit_button', 'quit_confirm_menu')
+    self.__state_machine:map('credits', 'back_button', 'main_menu')
+    self.__state_machine:map('play_menu', 'back_button', 'main_menu')
+    self.__state_machine:map('play_menu', 'online_button', 'online_game_menu')
+    self.__state_machine:map('play_menu', 'local_button', 'local_game_menu')
+    self.__state_machine:map('local_game_menu', 'back_button', 'play_menu')
+    self.__state_machine:map('local_game_menu', 'start_button', 'ingame')
+    self.__state_machine:map('online_game_menu', 'back_button', 'play_menu')
+    self.__state_machine:map('ingame', 'abort_button', 'abort_game_confirm_menu')
+    self.__state_machine:map('abort_game_confirm_menu', 'yes_button', 'main_menu')
+    self.__state_machine:map('abort_game_confirm_menu', 'no_button', 'ingame')
+    self.__state_machine:map('quit_confirm_menu', 'no_button', 'main_menu')
 end
 
 function App:load()
@@ -76,16 +56,16 @@ function App:load()
 end
 
 function App:update(dt)
-    --[[
-    suit.layout:reset(300, 100)
-    suit.layout:padding(10, 10)
-
-    suit.Button("Play", suit.layout:row(300, 60))
-    suit.Button("Credits", suit.layout:row(300, 60))
-    if suit.Button("Quit", suit.layout:row(300, 60)).hit then love.event.quit() end
-    --]]
-
-
+    local s = self.__state_machine:get_state()
+    if     s == 'main_menu'                 then self:__display_main_menu()
+    elseif s == 'credits'                   then self:__display_credits()
+    elseif s == 'play_menu'                 then self:__display_play_menu()
+    elseif s == 'local_game_menu'           then self:__display_local_game_menu()
+    elseif s == 'online_game_menu'          then self:__display_online_game_menu()
+    elseif s == 'ingame'                    then self:__display_ingame()
+    elseif s == 'abort_game_confirm_menu'   then self:__display_abort_game_confirm_menu()
+    elseif s == 'quit_confirm_menu'         then self:__display_quit_confirm_menu()
+    end
 end
 
 function App:draw()
@@ -114,131 +94,88 @@ function App:quit()
     return false
 end
 
+function App:__display_main_menu()
+    suit.layout:reset()
+    suit.Label("Chicks", suit.layout:row(400, 100))
+    if suit.Button("Play", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('play_button')
+    end
+    if suit.Button("Credits", suit.layout:row()).hit then
+        self.__state_machine:delta('credits_button')
+    end
+    if suit.Button("Quit", suit.layout:row()).hit then
+        self.__state_machine:delta('quit_button')
+    end
+end
 
---[[
-App.TILES = {
-    {y = 704,   x = 0},
-    {y = 660,   x = 25},
-    {y = 660,   x = -25},
-    {y = 616,   x = 50},
-    {y = 616,   x = 0},
-    {y = 616,   x = -50},
-    {y = 572,   x = 75},
-    {y = 572,   x = 25},
-    {y = 572,   x = -25},
-    {y = 572,   x = -75},
-    {y = 528,   x = 300},
-    {y = 528,   x = 250},
-    {y = 528,   x = 200},
-    {y = 528,   x = 150},
-    {y = 528,   x = 100},
-    {y = 528,   x = 50},
-    {y = 528,   x = 0},
-    {y = 528,   x = -50},
-    {y = 528,   x = -100},
-    {y = 528,   x = -150},
-    {y = 528,   x = -200},
-    {y = 528,   x = -250},
-    {y = 528,   x = -300},
-    {y = 484,   x = 275},
-    {y = 484,   x = 225},
-    {y = 484,   x = 175},
-    {y = 484,   x = 125},
-    {y = 484,   x = 75},
-    {y = 484,   x = 25},
-    {y = 484,   x = -25},
-    {y = 484,   x = -75},
-    {y = 484,   x = -125},
-    {y = 484,   x = -175},
-    {y = 484,   x = -225},
-    {y = 484,   x = -275},
-    {y = 440,   x = 250},
-    {y = 440,   x = 200},
-    {y = 440,   x = 150},
-    {y = 440,   x = 100},
-    {y = 440,   x = 50},
-    {y = 440,   x = 0},
-    {y = 440,   x = -50},
-    {y = 440,   x = -100},
-    {y = 440,   x = -150},
-    {y = 440,   x = -200},
-    {y = 440,   x = -250},
-    {y = 396,   x = 225},
-    {y = 396,   x = 175},
-    {y = 396,   x = 125},
-    {y = 396,   x = 75},
-    {y = 396,   x = 25},
-    {y = 396,   x = -25},
-    {y = 396,   x = -75},
-    {y = 396,   x = -125},
-    {y = 396,   x = -175},
-    {y = 396,   x = -225},
-    {y = 352,   x = 200},
-    {y = 352,   x = 150},
-    {y = 352,   x = 100},
-    {y = 352,   x = 50},
-    {y = 352,   x = 0},
-    {y = 352,   x = -50},
-    {y = 352,   x = -100},
-    {y = 352,   x = -150},
-    {y = 352,   x = -200},
-    {y = 308,   x = 225},
-    {y = 308,   x = 175},
-    {y = 308,   x = 125},
-    {y = 308,   x = 75},
-    {y = 308,   x = 25},
-    {y = 308,   x = -25},
-    {y = 308,   x = -75},
-    {y = 308,   x = -125},
-    {y = 308,   x = -175},
-    {y = 308,   x = -225},
-    {y = 264,   x = 250},
-    {y = 264,   x = 200},
-    {y = 264,   x = 150},
-    {y = 264,   x = 100},
-    {y = 264,   x = 50},
-    {y = 264,   x = 0},
-    {y = 264,   x = -50},
-    {y = 264,   x = -100},
-    {y = 264,   x = -150},
-    {y = 264,   x = -200},
-    {y = 264,   x = -250},
-    {y = 220,   x = 275},
-    {y = 220,   x = 225},
-    {y = 220,   x = 175},
-    {y = 220,   x = 125},
-    {y = 220,   x = 75},
-    {y = 220,   x = 25},
-    {y = 220,   x = -25},
-    {y = 220,   x = -75},
-    {y = 220,   x = -125},
-    {y = 220,   x = -175},
-    {y = 220,   x = -225},
-    {y = 220,   x = -275},
-    {y = 176,   x = 300},
-    {y = 176,   x = 250},
-    {y = 176,   x = 200},
-    {y = 176,   x = 150},
-    {y = 176,   x = 100},
-    {y = 176,   x = 50},
-    {y = 176,   x = 0},
-    {y = 176,   x = -50},
-    {y = 176,   x = -100},
-    {y = 176,   x = -150},
-    {y = 176,   x = -200},
-    {y = 176,   x = -250},
-    {y = 176,   x = -300},
-    {y = 132,   x = 75},
-    {y = 132,   x = 25},
-    {y = 132,   x = -25},
-    {y = 132,   x = -75},
-    {y = 88,    x = 50},
-    {y = 88,    x = 0},
-    {y = 88,    x = -50},
-    {y = 44,    x = 25},
-    {y = 44,    x = -25},
-    {y = 0,     x = 0}
-}
-]]
+function App:__display_play_menu()
+    suit.layout:reset()
+    suit.Label("Chicks > Play", suit.layout:row(400, 100))
+    if suit.Button("Local", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('local_button')
+    end
+    if suit.Button("Online", suit.layout:row()).hit then
+        self.__state_machine:delta('online_button')
+    end
+    if suit.Button("Back", suit.layout:row()).hit then
+        self.__state_machine:delta('back_button')
+    end
+end
+
+function App:__display_local_game_menu()
+    suit.layout:reset()
+    suit.Label("Chicks > Play > Local", suit.layout:row(400, 100))
+    if suit.Button("Start Game", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('start_button')
+    end
+    if suit.Button("Back", suit.layout:row()).hit then
+        self.__state_machine:delta('back_button')
+    end
+end
+
+function App:__display_online_game_menu()
+    suit.layout:reset()
+    suit.Label("Chicks > Play > Online", suit.layout:row(400, 100))
+    if suit.Button("Back", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('back_button')
+    end
+end
+
+function App:__display_ingame()
+    suit.layout:reset()
+    if suit.Button("Abort Game", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('abort_button')
+    end
+end
+
+function App:__display_abort_game_confirm_menu()
+    suit.layout:reset()
+    suit.Label("Are you sure you want to abort this game?", suit.layout:row(400, 100))
+    if suit.Button("Yes", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('yes_button')
+    end
+    if suit.Button("No", suit.layout:col()).hit then
+        self.__state_machine:delta('no_button')
+    end
+end
+
+function App:__display_quit_confirm_menu()
+    suit.layout:reset()
+    suit.Label("Are you sure you want to quit?", suit.layout:row(400, 100))
+    if suit.Button("Yes", suit.layout:row(100, 30)).hit then
+        love.event.quit()
+    end
+    if suit.Button("No", suit.layout:col()).hit then
+        self.__state_machine:delta('no_button')
+    end
+end
+
+function App:__display_credits()
+    suit.layout:reset()
+    suit.Label("(c) 2015-2016 YouniS Bensalah (younishd)", suit.layout:row(400, 100))
+    if suit.Button("Back", suit.layout:row(100, 30)).hit then
+        self.__state_machine:delta('back_button')
+    end
+end
 
 return App

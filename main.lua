@@ -19,14 +19,16 @@ socket          = require 'socket'
 
 -- CLASSES
 App             = require 'ui.app'
+StateMachine    = require 'ui.state_machine'
 Engine          = require 'core.engine'
 Board           = require 'core.board'
 Player          = require 'core.player'
 Target          = require 'core.target'
 
 -- HELPERS
-print_r         = require 'helpers.print_r'
-explode         = require 'helpers.explode'
+table.print     = require 'helpers.table.print_r'
+table.explode   = require 'helpers.table.explode'
+table.contains  = require 'helpers.table.contains'
 log             = require 'helpers.log'
 
 local app = App()
