@@ -154,14 +154,6 @@ function BoardWidget:__move_marble(from, to)
     self:__remove_marble(from)
 end
 
-function BoardWidget:__draw_marble(t, c)
-    love.graphics.setColor(255, 255, 255, 255)
-    love.graphics.draw(self.__assets[Board.REVERSE_MARBLES[c]],
-        self.tiles[t].x + BoardWidget.OFFSETS.tile.x + BoardWidget.OFFSETS.board.x,
-        self.tiles[t].y + BoardWidget.OFFSETS.tile.y + BoardWidget.OFFSETS.board.y,
-        0, 1, 1, self.__radius, self.__radius)
-end
-
 function BoardWidget:__draw_highlight(t)
     love.graphics.setColor(255, 255, 255, 128)
     love.graphics.draw(self.light,

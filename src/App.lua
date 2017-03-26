@@ -87,6 +87,8 @@ function App:mousereleased(x, y, button)
             self.__engine:move(from, to)
         end
 
+    elseif (button == 2 or button == 'r') then
+        self.__engine:finish()
     end
 end
 

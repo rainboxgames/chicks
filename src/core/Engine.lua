@@ -148,8 +148,11 @@ function Engine:move(from, to)
     log.debug("upordown = " .. upordown)
 
     -- calc center
-    local c = (src_vec[pivot_dir] + tar_vec[pivot_dir]) / 2
-    local center = Board:xyz_to_pos({x = src_vec[jump_dir], y = c})
+    local center_xyz = {}
+    center_xyz[jump_dir] = src_vec[jump_dir]
+    center_xyz[pivot_dir] = (src_vec[pivot_dir] + tar_vec[pivot_dir]) / 2
+    local center = Board:xyz_to_pos(center_xyz)
+    assert(center)
     log.debug("center = " .. center)
 
     -- check center is occupied
@@ -159,7 +162,7 @@ function Engine:move(from, to)
     end
 
     -- check if segment is clear otherwise
-    for j = src_vec[pivot_dir] + upordown, c - upordown, upordown do
+    for j = src_vec[pivot_dir] + upordown, center_xyz[pivot_dir] - upordown, upordown do
         local intersection_xyz = {}
         intersection_xyz[jump_dir] = src_vec[jump_dir]
         intersection_xyz[pivot_dir] = j
@@ -169,7 +172,7 @@ function Engine:move(from, to)
             return false
         end
     end
-    for j = c + upordown, tar_vec[pivot_dir], upordown do
+    for j = center_xyz[pivot_dir] + upordown, tar_vec[pivot_dir], upordown do
         local intersection_xyz = {}
         intersection_xyz[jump_dir] = src_vec[jump_dir]
         intersection_xyz[pivot_dir] = j

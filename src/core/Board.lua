@@ -132,7 +132,7 @@ function Board.static:xyz_axis_intersect(xyz)
 end
 
 function Board.static:pos_is_valid(pos)
-    return pos ~= nil and 1 <= pos and pos <= Board.MAX_TILES
+    return pos ~= nil and pos and 1 <= pos and pos <= Board.MAX_TILES
 end
 
 Board.MARBLES = {
