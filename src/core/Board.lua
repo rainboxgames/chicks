@@ -34,12 +34,12 @@ end
 function Board:place(pos, color)
     assert(Board:pos_is_valid(pos), "Invalid position.")
     assert(color == Board.MARBLES.green
-        or color == Board.MARBLES.blue
-        or color == Board.MARBLES.yellow
-        or color == Board.MARBLES.purple
-        or color == Board.MARBLES.white
-        or color == Board.MARBLES.red,
-        "Invalid or empty marble.")
+            or color == Board.MARBLES.blue
+            or color == Board.MARBLES.yellow
+            or color == Board.MARBLES.purple
+            or color == Board.MARBLES.white
+            or color == Board.MARBLES.red,
+            "Invalid or empty marble.")
 
     if self.__map[pos] ~= Board.MARBLES.empty then
         log.debug("There is already another marble.")

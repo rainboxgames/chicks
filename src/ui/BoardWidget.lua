@@ -52,26 +52,30 @@ function BoardWidget:on_mousedown(x, y)
     local xx, yy
     -- for each marble on the board
     for i = 1, Board.MAX_TILES do
-        xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
-        yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
+        local color = self.__board:get_color_by_pos(i)
+        -- only if not an empty tile
+        if self.__board:get_color_by_pos(i) ~= Board.MARBLES.empty then
+            xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
+            yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
 
-        if (math.abs(xx) <= self.__radius) and (math.abs(yy) <= self.__radius) then
-            if (xx * xx + yy * yy <= self.__radius2) then
+            if (math.abs(xx) <= self.__radius) and (math.abs(yy) <= self.__radius) then
+                if (xx * xx + yy * yy <= self.__radius2) then
 
-                -- enable drag
-                log.debug("BoardWidget is dragging.")
-                self.__drag.active = true
-                self.__drag.tile = i
-                self.__drag.x = Board.REVERSE_AXIS_MAP[i].x
-                self.__drag.y = Board.REVERSE_AXIS_MAP[i].y
-                self.__drag.color = self.__board:get_color_by_pos(i)
+                    -- enable drag
+                    log.debug("BoardWidget is dragging.")
+                    self.__drag.active = true
+                    self.__drag.tile = i
+                    self.__drag.x = Board.REVERSE_AXIS_MAP[i].x
+                    self.__drag.y = Board.REVERSE_AXIS_MAP[i].y
+                    self.__drag.color = color
 
-                -- strip the original marble
-                self:__remove_marble(i)
+                    -- strip the original marble
+                    self:__remove_marble(i)
 
+                end
+                -- no need to look further
+                break
             end
-            -- no need to look further
-            break
         end
     end
 end
