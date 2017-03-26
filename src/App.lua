@@ -29,15 +29,37 @@ function App:load()
 
     love.window.setMode(App.WINDOW.w, App.WINDOW.h)
     love.window.setTitle("Chicks " .. _VERSION)
+
+
+    -- for testing purposes only
+    log.debug("Let's test this crap...")
+    self.__players = {
+        Player("neo", {
+            Target(Board.TRIANGLES.a, Board.TRIANGLES.d, Board.MARBLES.green)
+        }),
+        Player("sorakun", {
+            Target(Board.TRIANGLES.e, Board.TRIANGLES.b, Board.MARBLES.red)
+        }),
+        Player("morpheus", {
+            Target(Board.TRIANGLES.c, Board.TRIANGLES.f, Board.MARBLES.blue)
+        })
+    }
+
+    local board = Board()
+
+    self.__engine = Engine(board, self.__players)
+    self.__engine:reset_board()
+
+    self.__boardwidget = BoardWidget:new(board)
 end
 
 function App:update(dt)
+    local x, y = love.mouse.getPosition()
+    self.__boardwidget:update_drag(x, y)
 end
 
 function App:draw()
-    b = Board:new()
-    bw = BoardWidget:new(b)
-    bw:draw()
+    self.__boardwidget:draw()
 end
 
 function App:textinput(t)
@@ -47,9 +69,25 @@ function App:keypressed(key)
 end
 
 function App:mousepressed(x, y, button)
+    if (button == 1 or button == 'l') then
+
+        local x, y = love.mouse.getPosition()
+        self.__boardwidget:on_mousedown(x, y)
+
+    end
 end
 
 function App:mousereleased(x, y, button)
+    if (button == 1 or button == 'l') then
+        local x, y = love.mouse.getPosition()
+        local from, to = self.__boardwidget:on_mouserelease(x, y)
+
+        -- pass move to core
+        if from > 0 and to > 0 then
+            self.__engine:move(from, to)
+        end
+
+    end
 end
 
 function App:conf(t)

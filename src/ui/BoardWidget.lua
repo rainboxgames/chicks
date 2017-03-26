@@ -38,8 +38,10 @@ function BoardWidget:initialize(board)
 end
 
 function BoardWidget:update_drag(x, y)
-    self.__drag.x = x
-    self.__drag.y = y
+    if self.__drag.active then
+        self.__drag.x = x
+        self.__drag.y = y
+    end
 end
 
 function BoardWidget:is_dragging()
@@ -50,21 +52,22 @@ function BoardWidget:on_mousedown(x, y)
     local xx, yy
     -- for each marble on the board
     for i = 1, Board.MAX_TILES do
-        xx = x - self.__board:get_color_by_pos(i).x - BoardWidget.OFFSETS.board.x - BoardWidget.OFFSETS.tile.x
-        yy = y - self.__board:get_color_by_pos(i).y - BoardWidget.OFFSETS.board.y - BoardWidget.OFFSETS.tile.y
+        xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
+        yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
 
         if (math.abs(xx) <= self.__radius) and (math.abs(yy) <= self.__radius) then
             if (xx * xx + yy * yy <= self.__radius2) then
 
                 -- enable drag
+                log.debug("BoardWidget is dragging.")
                 self.__drag.active = true
-                self.__drag.tile = k
-                self.__drag.x = self.__board:get_color_by_pos(i).x
-                self.__drag.y = self.__board:get_color_by_pos(i).y
-                self.__drag.color = v
+                self.__drag.tile = i
+                self.__drag.x = Board.REVERSE_AXIS_MAP[i].x
+                self.__drag.y = Board.REVERSE_AXIS_MAP[i].y
+                self.__drag.color = self.__board:get_color_by_pos(i)
 
                 -- strip the original marble
-                self:__remove_marble(k)
+                self:__remove_marble(i)
 
             end
             -- no need to look further
@@ -74,11 +77,16 @@ function BoardWidget:on_mousedown(x, y)
 end
 
 function BoardWidget:on_mouserelease(x, y)
+    -- if not dragging then do nothing
+    if not self.__drag.active then
+        return 0, 0
+    end
+
     local xx, yy
     -- for each tile on the board
-    for k, v in pairs(self.tiles) do
-        xx = x - v.x - BoardWidget.OFFSETS.board.x - BoardWidget.OFFSETS.tile.x
-        yy = y - v.y - BoardWidget.OFFSETS.board.y - BoardWidget.OFFSETS.tile.y
+    for i = 1, Board.MAX_TILES do
+        xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
+        yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
 
         if (math.abs(xx) <= self.__radius) and (math.abs(yy) <= self.__radius) then
             if (xx * xx + yy * yy <= self.__radius2) then
@@ -90,13 +98,14 @@ function BoardWidget:on_mouserelease(x, y)
                 self:__place_marble(self.__drag.tile, self.__drag.color)
 
                 -- if source and target are equal just ignore it
-                if self.__drag.tile == k then
+                if self.__drag.tile == i then
                     return 0, 0
                 end
 
-                return self.__drag.tile, k
+                return self.__drag.tile, i
 
             end
+            -- no need to look further
             break
         end
     end
