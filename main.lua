@@ -1,35 +1,32 @@
 --[[
 -- This file is part of chicks.
 --
--- (c) 2015-2016 YouniS Bensalah <younis.bensalah@gmail.com>
+-- (c) 2015-2017 YouniS Bensalah <younis.bensalah@gmail.com>
 --
 -- For the full copyright and license information, please view the LICENSE
 -- file that was distributed with this source code.
 --]]
 
-CHICKS_VERSION = '1.0-dev'
+_VERSION = '1.0.0-dev'
 
 package.path = package.path .. ';src/?.lua;lib/?.lua;lib/?/?.lua;lib/?/init.lua'
 
--- LIBS
 class           = require 'middleclass'
-suit            = require 'suit'
-copas           = require 'copas'
 socket          = require 'socket'
-
--- CLASSES
-App             = require 'ui.app'
-StateMachine    = require 'ui.state_machine'
-Engine          = require 'core.engine'
-Board           = require 'core.board'
-Player          = require 'core.player'
-Target          = require 'core.target'
-
--- HELPERS
-table.print     = require 'helpers.table.print_r'
-table.explode   = require 'helpers.table.explode'
-table.contains  = require 'helpers.table.contains'
-log             = require 'helpers.log'
+suit            = require 'suit'
+gamestate       = require 'hump.gamestate'
+copas           = require 'copas'
+App             = require 'App'
+Engine          = require 'core.Engine'
+Board           = require 'core.Board'
+Player          = require 'core.Player'
+Target          = require 'core.Target'
+BoardWidget     = require 'ui.BoardWidget'
+log             = require 'util.log'
+tablextra       = require 'util.tablextra'
+table.print     = tablextra.print
+table.explode   = tablextra.explode
+table.contains  = tablextra.contains
 
 local app = App()
 

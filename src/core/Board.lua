@@ -1,7 +1,7 @@
 --[[
 -- This file is part of chicks.
 --
--- (c) 2015-2016 YouniS Bensalah <younis.bensalah@gmail.com>
+-- (c) 2015-2017 YouniS Bensalah <younis.bensalah@gmail.com>
 --
 -- For the full copyright and license information, please view the LICENSE
 -- file that was distributed with this source code.
@@ -144,6 +144,14 @@ Board.MARBLES = {
     white = 5,
     red = 6
 }
+Board.REVERSE_MARBLES = {}
+Board.REVERSE_MARBLES[0] = "empty"
+Board.REVERSE_MARBLES[1] = "green"
+Board.REVERSE_MARBLES[2] = "blue"
+Board.REVERSE_MARBLES[3] = "yellow"
+Board.REVERSE_MARBLES[4] = "purple"
+Board.REVERSE_MARBLES[5] = "white"
+Board.REVERSE_MARBLES[6] = "red"
 
 Board.MAX_TILES = 121
 
