@@ -167,6 +167,8 @@ function Engine:move(from, to)
         intersection_xyz[jump_dir] = src_vec[jump_dir]
         intersection_xyz[pivot_dir] = j
         local intersection = Board:xyz_to_pos(intersection_xyz)
+        assert(intersection)
+        log.debug("intersection = " .. intersection)
         if self.__board:get_color_by_pos(intersection) ~= Board.MARBLES.empty then
             log.debug(jump_dir .. " segment is not clear.")
             return false
@@ -177,6 +179,8 @@ function Engine:move(from, to)
         intersection_xyz[jump_dir] = src_vec[jump_dir]
         intersection_xyz[pivot_dir] = j
         local intersection = Board:xyz_to_pos(intersection_xyz)
+        assert(intersection)
+        log.debug("intersection = " .. intersection)
         if self.__board:get_color_by_pos(intersection) ~= Board.MARBLES.empty then
             log.debug(jump_dir .. " segment is not clear.")
             return false

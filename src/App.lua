@@ -51,11 +51,15 @@ function App:load()
     self.__engine:reset_board()
 
     self.__boardwidget = BoardWidget:new(board)
+
+    -- register callbacks
+    self.__boardwidget:register_callback_move(self.__callback_move, self)
+    self.__boardwidget:register_callback_finish(self.__callback_finish, self)
 end
 
 function App:update(dt)
     local x, y = love.mouse.getPosition()
-    self.__boardwidget:update_drag(x, y)
+    self.__boardwidget:update_mouse(x, y)
 end
 
 function App:draw()
@@ -70,25 +74,17 @@ end
 
 function App:mousepressed(x, y, button)
     if (button == 1 or button == 'l') then
-
-        local x, y = love.mouse.getPosition()
-        self.__boardwidget:on_mousedown(x, y)
-
+        self.__boardwidget:mousepressed(x, y, 1)
+    elseif (button == 2 or button == 'r') then
+        self.__boardwidget:mousepressed(x, y, 2)
     end
 end
 
 function App:mousereleased(x, y, button)
     if (button == 1 or button == 'l') then
-        local x, y = love.mouse.getPosition()
-        local from, to = self.__boardwidget:on_mouserelease(x, y)
-
-        -- pass move to core
-        if from > 0 and to > 0 then
-            self.__engine:move(from, to)
-        end
-
+        self.__boardwidget:mousereleased(x, y, 1)
     elseif (button == 2 or button == 'r') then
-        self.__engine:finish()
+        self.__boardwidget:mousereleased(x, y, 2)
     end
 end
 
@@ -100,6 +96,18 @@ end
 function App:quit()
     log.info("Bye.")
     return false
+end
+
+function App:__callback_move(from, to)
+    log.debug("App:__callback_move()")
+
+    self.__engine:move(from, to)
+end
+
+function App:__callback_finish()
+    log.debug("App:__callback_finish()")
+
+    self.__engine:finish()
 end
 
 return App

@@ -27,6 +27,7 @@ tablextra       = require 'util.tablextra'
 table.print     = tablextra.print
 table.explode   = tablextra.explode
 table.contains  = tablextra.contains
+table.append    = tablextra.append
 
 local app = App()
 

@@ -24,6 +24,7 @@ function BoardWidget:initialize(board)
 
     self.__board = board
 
+    -- keep track of mouse dragging
     self.__drag = {
         active = false,
         tile = 0,
@@ -32,143 +33,150 @@ function BoardWidget:initialize(board)
         color = 0
     }
 
-    -- TODO this sucks
-    self.__radius = 22
-    self.__radius2 = 484
+    -- callbacks
+    self.__callbacks = {
+        move = {},
+        finish = {}
+    }
 end
 
-function BoardWidget:update_drag(x, y)
+function BoardWidget:register_callback_move(callback, selfref)
+    table.append(self.__callbacks.move, {callback, selfref})
+end
+
+function BoardWidget:__notify_callback_move(from, to)
+    for _,v in pairs(self.__callbacks.move) do
+        v[1](v[2], from, to)
+    end
+end
+
+function BoardWidget:register_callback_finish(callback, selfref)
+    table.append(self.__callbacks.finish, {callback, selfref})
+end
+
+function BoardWidget:__notify_callback_finish()
+    for _,v in pairs(self.__callbacks.finish) do
+        v[1](v[2])
+    end
+end
+
+function BoardWidget:update_mouse(x, y)
     if self.__drag.active then
         self.__drag.x = x
         self.__drag.y = y
     end
 end
 
-function BoardWidget:is_dragging()
-    return self.__drag.active
+function BoardWidget:mousepressed(x, y, button)
+    if button == 1 then
+        local xx, yy
+        -- for each tile on the board check which one is closest
+        for i = 1, Board.MAX_TILES do
+            local color = self.__board:get_color_by_pos(i)
+            -- only if not an empty tile
+            if color ~= Board.MARBLES.empty then
+                xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
+                yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
+                if (math.abs(xx) <= BoardWidget.OFFSETS.radius) and (math.abs(yy) <= BoardWidget.OFFSETS.radius) then
+                    if (xx * xx + yy * yy <= BoardWidget.OFFSETS.radius2) then
+                        -- enable drag
+                        log.debug("BoardWidget is dragging.")
+                        self.__drag = {
+                            active = true,
+                            tile = i,
+                            x = Board.REVERSE_AXIS_MAP[i].x,
+                            y = Board.REVERSE_AXIS_MAP[i].y,
+                            color = color
+                        }
+                    end
+                    -- no need to look further
+                    break
+                end
+            end
+        end
+    end
 end
 
-function BoardWidget:on_mousedown(x, y)
-    local xx, yy
-    -- for each marble on the board
-    for i = 1, Board.MAX_TILES do
-        local color = self.__board:get_color_by_pos(i)
-        -- only if not an empty tile
-        if self.__board:get_color_by_pos(i) ~= Board.MARBLES.empty then
+function BoardWidget:mousereleased(x, y, button)
+    if button == 1 then
+        -- if not dragging then do nothing
+        if not self.__drag.active then return end
+
+        local xx, yy
+        -- for each tile on the board check which one is closest
+        for i = 1, Board.MAX_TILES do
             xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
             yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
+            if (math.abs(xx) <= BoardWidget.OFFSETS.radius) and (math.abs(yy) <= BoardWidget.OFFSETS.radius) then
+                if (xx * xx + yy * yy <= BoardWidget.OFFSETS.radius2) then
+                    -- disable drag
+                    self.__drag.active = false
 
-            if (math.abs(xx) <= self.__radius) and (math.abs(yy) <= self.__radius) then
-                if (xx * xx + yy * yy <= self.__radius2) then
+                    -- if source and target are equal just ignore it
+                    if self.__drag.tile == i then return end
 
-                    -- enable drag
-                    log.debug("BoardWidget is dragging.")
-                    self.__drag.active = true
-                    self.__drag.tile = i
-                    self.__drag.x = Board.REVERSE_AXIS_MAP[i].x
-                    self.__drag.y = Board.REVERSE_AXIS_MAP[i].y
-                    self.__drag.color = color
-
-                    -- strip the original marble
-                    self:__remove_marble(i)
-
+                    self:__notify_callback_move(self.__drag.tile, i)
                 end
                 -- no need to look further
                 break
             end
         end
+
+    -- right click to finish turn
+    elseif button == 2 then
+        self:__notify_callback_finish()
     end
-end
-
-function BoardWidget:on_mouserelease(x, y)
-    -- if not dragging then do nothing
-    if not self.__drag.active then
-        return 0, 0
-    end
-
-    local xx, yy
-    -- for each tile on the board
-    for i = 1, Board.MAX_TILES do
-        xx = x - (BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.board.x + BoardWidget.OFFSETS.tile.x)
-        yy = y - (BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.board.y + BoardWidget.OFFSETS.tile.y)
-
-        if (math.abs(xx) <= self.__radius) and (math.abs(yy) <= self.__radius) then
-            if (xx * xx + yy * yy <= self.__radius2) then
-
-                -- disable drag
-                self.__drag.active = false
-
-                -- drop marble to initial position
-                self:__place_marble(self.__drag.tile, self.__drag.color)
-
-                -- if source and target are equal just ignore it
-                if self.__drag.tile == i then
-                    return 0, 0
-                end
-
-                return self.__drag.tile, i
-
-            end
-            -- no need to look further
-            break
-        end
-    end
-    return 0, 0
 end
 
 function BoardWidget:draw()
-    -- draw plain board
+    -- draw empty board
+    self:__draw_board()
+
+
+    -- draw resting tiles
+    for i = 1, Board.MAX_TILES do
+        if not (self.__drag.active and self.__drag.tile == i) then
+            self:__draw_marble(i)
+        end
+    end
+
+    -- draw drag'n'drop tile if any
+    if self.__drag.active then
+        self:__draw_marble_xy(self.__drag.tile, self.__drag.x, self.__drag.y)
+    end
+end
+
+function BoardWidget:__draw_marble(t)
+    self:__draw_marble_xy(t,
+            BoardWidget.OFFSETS.tiles[t].x + BoardWidget.OFFSETS.tile.x + BoardWidget.OFFSETS.board.x,
+            BoardWidget.OFFSETS.tiles[t].y + BoardWidget.OFFSETS.tile.y + BoardWidget.OFFSETS.board.y)
+end
+
+function BoardWidget:__draw_marble_xy(t, x, y)
+    love.graphics.setColor(255, 255, 255, 255)
+    color = self.__board:get_color_by_pos(t)
+    love.graphics.draw(self.__assets[Board.REVERSE_MARBLES[color]], x, y,
+            0, 1, 1, BoardWidget.OFFSETS.radius, BoardWidget.OFFSETS.radius)
+end
+
+function BoardWidget:__draw_board()
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.draw(self.__assets.board, BoardWidget.OFFSETS.board.x, BoardWidget.OFFSETS.board.y)
 
-    -- draw marbles and empty tiles
+    -- draw empty tiles
     for i = 1, Board.MAX_TILES do
-        color = self.__board:get_color_by_pos(i)
-        love.graphics.draw(self.__assets[Board.REVERSE_MARBLES[color]],
-            BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.tile.x + BoardWidget.OFFSETS.board.x,
-            BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.tile.y + BoardWidget.OFFSETS.board.y,
-            0, 1, 1, self.__radius, self.__radius)
+        love.graphics.draw(self.__assets.empty,
+                BoardWidget.OFFSETS.tiles[i].x + BoardWidget.OFFSETS.tile.x + BoardWidget.OFFSETS.board.x,
+                BoardWidget.OFFSETS.tiles[i].y + BoardWidget.OFFSETS.tile.y + BoardWidget.OFFSETS.board.y,
+                0, 1, 1, BoardWidget.OFFSETS.radius, BoardWidget.OFFSETS.radius)
     end
-
-    -- draw drag'n'drop marble
-    if self.__drag.active then
-        love.graphics.setColor(255, 255, 255, 255)
-        love.graphics.draw(self.__assets[Board.REVERSE_MARBLES[self.__drag.color]],
-            self.__drag.x,
-            self.__drag.y,
-            0, 1, 1, self.__radius, self.__radius)
-    end
-
-    -- draw highlighted tiles
-    -- for t, _ in pairs(self.highlights) do
-    --     self:_draw_highlight(t)
-    -- end
-end
-
-function BoardWidget:__place_marble(t, color)
-    self.__board:place(t, color)
-end
-
-function BoardWidget:__remove_marble(t)
-    self.__board:remove(t)
-end
-
-function BoardWidget:__move_marble(from, to)
-    self:__place_marble(to, self.marble_map[from])
-    self:__remove_marble(from)
-end
-
-function BoardWidget:__draw_highlight(t)
-    love.graphics.setColor(255, 255, 255, 128)
-    love.graphics.draw(self.light,
-        self.tiles[t].x + BoardWidget.OFFSETS.tile.x + BoardWidget.OFFSETS.board.x,
-        self.tiles[t].y + BoardWidget.OFFSETS.tile.y + BoardWidget.OFFSETS.board.y,
-        0, 1, 1, self.__radius, self.__radius)
 end
 
 BoardWidget.OFFSETS = {
-    board = { x = 132, y = 20 },
-    tile = { x = 380, y = 28 },
+    board = {x = 132, y = 20},
+    radius = 22,
+    radius2 = 484,
+    tile = {x = 380, y = 28},
     tiles = {
         {y = 704, x = 0},
         {y = 660, x = 25},
