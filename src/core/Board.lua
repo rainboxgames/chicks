@@ -69,7 +69,7 @@ function Board:remove(pos)
 end
 
 function Board:get_color_by_pos(pos)
-    assert(Board:pos_is_valid(pos), "Invalid position.")
+    assert(Board:pos_is_valid(pos), "Invalid position: " .. tostring(pos))
     return self.__map[pos]
 end
 
@@ -113,19 +113,19 @@ function Board.static:xyz_axis_intersect(xyz)
         local sx = {}
         for _, v in pairs(Board.AXIS_MAP.x[xyz.x]) do sx[v] = true end
         for _, v in pairs(Board.AXIS_MAP.y[xyz.y]) do
-            if sx[v] then s[#s+1] = v end
+            if sx[v] then table.append(s, v) end
         end
     elseif xyz.y ~= nil and xyz.z ~= nil then
         local sy = {}
         for _, v in pairs(Board.AXIS_MAP.y[xyz.y]) do sy[v] = true end
         for _, v in pairs(Board.AXIS_MAP.z[xyz.z]) do
-            if sy[v] then s[#s+1] = v end
+            if sy[v] then table.append(s, v) end
         end
     elseif xyz.z ~= nil and xyz.x ~= nil then
         local sz = {}
         for _, v in pairs(Board.AXIS_MAP.z[xyz.z]) do sz[v] = true end
         for _, v in pairs(Board.AXIS_MAP.x[xyz.x]) do
-            if sz[v] then s[#s+1] = v end
+            if sz[v] then table.append(s, v) end
         end
     end
     return s
@@ -191,7 +191,7 @@ Board.AXIS_MAP = {
         {10, 18, 30, 41, 51, 60, 69, 79, 90, 102},
         {6, 9, 17, 29, 40, 50, 59, 68, 78, 89, 101},
         {3, 5, 8, 16, 28, 39, 49, 58, 67, 77, 88, 100},
-        {1, 2, 4, 7, 15, 27, 38, 48, 57, 66, 78, 87, 99},
+        {1, 2, 4, 7, 15, 27, 38, 48, 57, 66, 76, 87, 99},
         {14, 26, 37, 47},
         {13, 25, 36},
         {12, 24},
