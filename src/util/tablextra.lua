@@ -71,4 +71,8 @@ function tablextra.explode(d, p)
     return t
 end
 
+function tablextra.append(t, x)
+    t[#t+1] = x
+end
+
 return tablextra
