@@ -55,6 +55,9 @@ function App:load()
     -- register callbacks
     self.__boardwidget:register_callback_move(self.__callback_move, self)
     self.__boardwidget:register_callback_finish(self.__callback_finish, self)
+
+    -- debug complete game
+    complete_game(self.__engine)
 end
 
 function App:update(dt)

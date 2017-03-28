@@ -29,6 +29,9 @@ table.explode   = tablextra.explode
 table.contains  = tablextra.contains
 table.append    = tablextra.append
 
+-- for debug purposes only
+complete_game   = require 'complete_game'
+
 local app = App()
 
 function love.load()
