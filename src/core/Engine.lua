@@ -204,6 +204,12 @@ function Engine:finish()
         return false
     end
 
+    -- check if game is already over
+    if self.__winner then
+        log.debug("The game is already over. Player " .. self.__winner .. " won, remember?")
+        return false
+    end
+
     log.debug("Finish " .. self.__current_move.source .. " --> " .. self.__current_move.target)
 
     -- reset current move cursors
