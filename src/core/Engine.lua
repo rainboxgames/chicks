@@ -30,7 +30,8 @@ function Engine:initialize(board, players, current_player_id)
         target = 0,
         simple = false
     }
-    self.__winner = 0
+
+    self.__winner = false
 end
 
 function Engine:reset_board()
@@ -220,10 +221,10 @@ function Engine:finish()
 end
 
 function Engine:get_winner()
-    if self.__winner == 0 then
-        return false
-    else
+    if self.__winner then
         return self.__players[self.__winner]
+    else
+        return false
     end
 end
 
@@ -235,9 +236,11 @@ function Engine:__look_for_win()
     for i, player in pairs(self.__players) do
         local win = true
         for j, target in pairs(player:get_targets()) do
-            local color = target:get_color()
+            local target_color = target:get_color()
             for k, tile in pairs(target:get_away()) do
-                if self.__board:get_color_by_pos(tile) ~= color then
+                local actual_color = self.__board:get_color_by_pos(tile)
+                if actual_color ~= target_color then
+                    log.debug("Tile " ..  tile .. " w/ color " .. actual_color .. " != " .. target_color)
                     win = false
                     break
                 end
@@ -246,9 +249,13 @@ function Engine:__look_for_win()
             if not win then break end
         end
         -- we found a winner
-        if win then break end
+        if win then
+            self.__winner = self.__current_player_id
+            log.debug("We found a winner! Player " .. self.__winner)
+            return true
+        end
     end
-    return win
+    return false
 end
 
 function Engine:__next()
