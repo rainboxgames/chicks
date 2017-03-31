@@ -25,7 +25,7 @@ function App:load()
             \/     \/        \/     \/     \/
 
     ]])
-    log.info("Version " .. _VERSION)
+    log.info("Client version " .. _VERSION)
 
     love.window.setMode(App.WINDOW.w, App.WINDOW.h)
     love.window.setTitle("Chicks " .. _VERSION)

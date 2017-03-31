@@ -13,7 +13,6 @@ package.path = package.path .. ';src/?.lua;lib/?.lua;lib/?/?.lua;lib/?/init.lua'
 
 class           = require 'middleclass'
 socket          = require 'socket'
-suit            = require 'suit'
 gamestate       = require 'hump.gamestate'
 copas           = require 'copas'
 App             = require 'App'

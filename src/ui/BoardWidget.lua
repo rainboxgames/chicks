@@ -132,7 +132,6 @@ function BoardWidget:draw()
     -- draw empty board
     self:__draw_board()
 
-
     -- draw resting tiles
     for i = 1, Board.MAX_TILES do
         if not (self.__drag.active and self.__drag.tile == i) then
