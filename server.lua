@@ -195,7 +195,7 @@ local function handle(sock)
                 react(sock, change_color(peer, pieces[2]))
 
             elseif pieces[1] == "MOV" and pieces[2] and pieces[3] then
-                react(sock, move(peer, pieces[2], pieces[3]))
+                react(sock, move(peer, tonumber(pieces[2]), tonumber(pieces[3])))
 
             elseif pieces[1] == "RDY" then
                 react(sock, toggle_ready(peer))
@@ -210,7 +210,7 @@ local function handle(sock)
                 react(sock, start_game(peer))
 
             else
-                log.debug("Invalid command.")
+                log.debug("Invalid command from client.")
                 send(sock, "ERR")
             end
         end

@@ -57,12 +57,46 @@ function App:load()
     self.__boardwidget:register_callback_finish(self.__callback_finish, self)
 
     -- debug complete game
-    complete_game(self.__engine)
+    --complete_game(self.__engine)
+
+    -- connect to game server
+    local host, port = "localhost", 44444
+    self.__socket = socket.connect(host, port)
+
+    if self.__socket == nil then
+        log.error("Failed to connect to server.")
+        os.exit(-1)
+    end
+    log.info("Connected to " .. host .. ":" .. port)
+
+    -- set block timeout
+    self.__socket:settimeout(0.01)
+
+    -- receive id
+
+    -- debug only
+    self:__send("NEW foo 2")
+    self:__send("ETR foo")
+    self:__send("LOS")
 end
 
 function App:update(dt)
     local x, y = love.mouse.getPosition()
     self.__boardwidget:update_mouse(x, y)
+
+    local data = self.__socket:receive()
+
+    if data then
+        local pieces = table.explode(' ', data)
+
+        if pieces[1] == "MOV" and pieces[2] and pieces[3] then
+            self.__engine:move(tonumber(pieces[2]), tonumber(pieces[3]))
+        elseif pieces[1] == "PLY" then
+            self.__engine:finish()
+        else
+            log.debug("Invalid command from server.")
+        end
+    end
 end
 
 function App:draw()
@@ -103,14 +137,24 @@ end
 
 function App:__callback_move(from, to)
     log.debug("App:__callback_move()")
-
-    self.__engine:move(from, to)
+    if self.__engine:move(from, to) then
+        self:__send("MOV " .. from .. " " .. to)
+    end
 end
 
 function App:__callback_finish()
     log.debug("App:__callback_finish()")
 
-    self.__engine:finish()
+    if self.__engine:finish() then
+        self:__send("PLY")
+    end
+end
+
+function App:__send(payload)
+    self.__socket:send(struct.pack('>H', string.len(payload)) .. payload)
+end
+
+function App:__recv()
 end
 
 return App
